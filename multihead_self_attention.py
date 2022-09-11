@@ -1,7 +1,6 @@
-import tensorflow as tf
-from tensorflow.keras import Model
-from tensorflow.keras.layers import Layer, Dropout, Dense
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.layers import Layer, Dropout, Dense
 
 np.random.seed(1)
 tf.random.set_seed(1)
@@ -9,6 +8,48 @@ tf.keras.utils.set_random_seed(1)
 
 
 class MultiHeadSelfAttention(Layer):
+    """
+    Apply Multi-Head Self Attention.
+
+    Parameters
+    ----------
+    num_heads: int = 2,
+    embedding_dim: int = 64,
+    projection_dim: int = None,
+    qkv_bias: bool = True,
+    attention_drop: float = 0.2,
+    linear_drop: float = 0.2,
+
+    num_heads: int
+        Number of heads
+
+    embedding_dim: int
+        Size of embedding dimension i.e. D or Dmodel
+
+    projection_dim: int
+        Dimension for each head
+
+    qkv_bias: bool
+        Use bias in query, keys and values projection layer
+
+    attention_drop: float
+        Dropout rate for the attention matrix
+
+    linear_drop: float
+        Dropout rate for the final linear projection
+
+    Attributes
+    ----------
+
+    scale: float
+        Square root of projection_dim
+
+
+    heads_merge_dimension: int
+        Number of total Dimension after merging feature vector output from each head
+
+    """
+
     def __init__(
         self,
         num_heads: int = 2,
@@ -30,6 +71,8 @@ class MultiHeadSelfAttention(Layer):
         self.scale = self.projection_dim**0.5
 
         self.qkv_W = Dense(units=3 * self.num_heads * self.projection_dim, name="W_expand_project", use_bias=qkv_bias)
+
+        self.heads_merge_dimension = self.projection_dim * self.num_heads
         self.final_linear_project = Dense(units=self.embedding_dim, name="final_project")
 
     def call(self, input_mat):
@@ -60,7 +103,7 @@ class MultiHeadSelfAttention(Layer):
         weighted_values = tf.transpose(weighted_values, perm=(0, 2, 1, 3))  # Shape: (#B, #tokens, #heads, #projection_dim)
         # tf.print("bring head and dim together", tf.shape(final_out))
 
-        weighted_values = tf.reshape(weighted_values, (batch_dims, input_dims, -1))
+        weighted_values = tf.reshape(weighted_values, (batch_dims, input_dims, self.heads_merge_dimension))
         # tf.print("Concatenating values from all heads:", tf.shape(weighted_values))
 
         mhsa_output = self.final_linear_project(weighted_values)

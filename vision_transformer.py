@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from multihead_self_attention import MultiHeadSelfAttention
 from tensorflow.keras.layers import Layer, Conv2D, Dropout, Dense, LayerNormalization
 from tensorflow.keras import Model, Sequential
 
@@ -64,68 +65,6 @@ class PatchEmbedding(Layer):
         x = tf.reshape(x, (-1, self.n_patches, self.embedding_dim))  # Shape: (#B, n_patches, embedding_dim)
 
         return x
-
-
-class MultiHeadSelfAttention(Layer):
-    def __init__(
-        self,
-        num_heads: int = 2,
-        embedding_dim: int = 64,
-        projection_dim: int = None,
-        qkv_bias: bool = True,
-        attention_drop: float = 0.2,
-        linear_drop: float = 0.2,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self.num_heads = num_heads
-        self.embedding_dim = embedding_dim
-        self.projection_dim = projection_dim if projection_dim else self.embedding_dim // self.num_heads
-
-        self.attn_dropout = Dropout(attention_drop)
-        self.linear_dropout = Dropout(linear_drop)
-
-        self.scale = self.projection_dim**0.5
-
-        self.qkv_W = Dense(units=3 * self.num_heads * self.projection_dim, name="W_expand_project", use_bias=qkv_bias)
-        self.final_linear_project = Dense(units=self.embedding_dim, name="final_project")
-
-    def call(self, input_mat):
-
-        batch_dims = tf.shape(input_mat)[0]
-        input_dims = tf.shape(input_mat)[1]
-
-        Q_K_V = self.qkv_W(input_mat)  # Shape: (#B, #tokens, #projection_dim *3)
-        # tf.print(tf.shape(Q_K_V))
-
-        # Shape: (#B, #tokens, #heads, #projection_dim *3)
-        Q_K_V_reshape = tf.reshape(Q_K_V, (batch_dims, input_dims, self.num_heads, 3 * self.projection_dim))
-        # tf.print(tf.shape(Q_K_V_reshape))
-
-        Q_K_V_transpose = tf.transpose(Q_K_V_reshape, perm=(0, 2, 1, 3))  # Shape: (#B, #heads, #tokens, #projection_dim * 3)
-        # tf.print(tf.shape(Q_K_V_transpose))
-
-        q, k, v = tf.split(Q_K_V_transpose, num_or_size_splits=3, axis=-1)
-        # print("q:", q.shape, "k:", k.shape, "v:", v.shape)
-
-        attention_matrix = tf.nn.softmax(q @ tf.transpose(k, perm=(0, 1, 3, 2)) / self.scale, axis=-1)
-        # tf.print("attention_matrix:", tf.shape(attention_matrix))
-        attention_matrix = self.attn_dropout(attention_matrix)
-
-        weighted_values = attention_matrix @ v  # Shape: (#B, #heads, #tokens, #projection_dim)
-        # tf.print("Reweighting inputs:", tf.shape(weighted_values))
-
-        weighted_values = tf.transpose(weighted_values, perm=(0, 2, 1, 3))  # Shape: (#B, #tokens, #heads, #projection_dim)
-        # tf.print("bring head and dim together", tf.shape(final_out))
-
-        weighted_values = tf.reshape(weighted_values, (batch_dims, input_dims, -1))
-        # tf.print("Concatenating values from all heads:", tf.shape(weighted_values))
-
-        mhsa_output = self.final_linear_project(weighted_values)
-        mhsa_output = self.linear_dropout(mhsa_output)
-        # tf.print("mhsa_output:", tf.shape(mhsa_output))
-
-        return mhsa_output
 
 
 class Block(Layer):
@@ -234,6 +173,9 @@ class VisionTransformer(Model):
     linear_drop, attention_drop: float
         Dropout layers probability
 
+    n_classes: int
+        Number of Classes.
+
     Attributes
     ----------
 
@@ -295,10 +237,23 @@ class VisionTransformer(Model):
                 )
             )
         zeros_init = tf.zeros_initializer()
-        self.cls_token = self.add_weight(shape=(1, 1, self.embedding_dim), initializer=zeros_init, trainable=True)
-        self.pos_embed = self.add_weight(shape=(1, 1 + self.patch_embedding.n_patches, self.embedding_dim), initializer=zeros_init, trainable=True)
+        self.cls_token = self.add_weight(shape=(1, 1, self.embedding_dim), initializer=zeros_init, trainable=True, name="cls_token")
+        self.pos_embed = self.add_weight(
+            shape=(1, 1 + self.patch_embedding.n_patches, self.embedding_dim), initializer=zeros_init, trainable=True, name="position_emebedding"
+        )
 
-        self.mlp_head = Sequential(layers=[LayerNormalization(epsilon=1e-6), Dense(n_classes)])
+        # self.mlp_head = Sequential(layers=[LayerNormalization(epsilon=1e-6), Dense(n_classes)])
+
+        hidden_features = int(embedding_dim * mlp_ratio)
+
+        self.mlp_head = Sequential(
+            layers=[
+                Dense(hidden_features, activation="gelu"),
+                Dropout(linear_drop),
+                Dense(embedding_dim),
+                Dropout(linear_drop),
+            ]
+        )
 
     def call(self, x):
 
@@ -318,17 +273,46 @@ class VisionTransformer(Model):
 
         cls_token_final = tf.gather(x, indices=0, axis=1)  # Take only the class token
 
-        tf.print(tf.shape(cls_token_final))
-
         x = self.mlp_head(cls_token_final)
 
         return x
 
 
 if __name__ == "__main__":
-    a = tf.random.normal((1, 224, 224, 3))
 
-    model = VisionTransformer()
-    model(a)
+    from dataclasses import dataclass
 
+    class Config:
+        IMAGE_SIZE = 32
+
+        EMBEDDING_DIM = 256
+        MLP_RATIO = 2.0
+        NUM_HEADS = 8
+        DEPTH = 6
+        PATCH_SIZE = 4
+
+        N_CLASSES = 10
+        LINEAR_DROP = 0.2
+        ATTENTION_DROP = 0.0
+        LEARNING_RATE = 3e-4
+
+        BATCH_SIZE = 256
+        NUM_EPOCHS = 100
+        WEIGHT_DECAY = 0.01
+
+    model = VisionTransformer(
+        img_size=Config.IMAGE_SIZE,
+        patch_size=Config.PATCH_SIZE,
+        n_classes=Config.N_CLASSES,
+        embedding_dim=Config.EMBEDDING_DIM,
+        depth=Config.DEPTH,
+        num_heads=Config.NUM_HEADS,
+        mlp_ratio=Config.MLP_RATIO,
+        linear_drop=Config.LINEAR_DROP,
+        attention_drop=Config.ATTENTION_DROP,
+    )
+
+    a = tf.random.normal((1, Config.IMAGE_SIZE, Config.IMAGE_SIZE, 3))
+
+    print(model(a).shape)
     model.summary()

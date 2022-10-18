@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
-from multihead_self_attention import MultiHeadSelfAttention
+
+# from multihead_self_attention import MultiHeadSelfAttention
+from multihead_self_attention_2 import MultiHeadSelfAttentionEinSum as MultiHeadSelfAttention
 from tensorflow.keras.layers import Layer, Conv2D, Dropout, Dense, LayerNormalization
 from tensorflow.keras import Model, Sequential
 
@@ -280,7 +282,9 @@ class VisionTransformer(Model):
 
 if __name__ == "__main__":
 
-    from dataclasses import dataclass
+    # gpus = tf.config.list_physical_devices("GPU")
+    # if gpus:
+    #     tf.config.set_logical_device_configuration(gpus[0], [tf.config.LogicalDeviceConfiguration(memory_limit=5292)])
 
     class Config:
         IMAGE_SIZE = 32

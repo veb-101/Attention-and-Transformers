@@ -252,8 +252,8 @@ class VisionTransformer(Model):
             layers=[
                 Dense(hidden_features, activation="gelu"),
                 Dropout(linear_drop),
-                Dense(embedding_dim),
-                Dropout(linear_drop),
+                Dense(n_classes),
+                # Dropout(linear_drop),
             ]
         )
 

@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-# from multihead_self_attention import MultiHeadSelfAttention
-from multihead_self_attention_2 import MultiHeadSelfAttentionEinSum as MultiHeadSelfAttention
+# from multihead_self_attention import MultiHeadSelfAttention as MHSA
+from multihead_self_attention import MultiHeadSelfAttentionEinSum as MHSA
 from tensorflow.keras.layers import Layer, Conv2D, Dropout, Dense, LayerNormalization
 from tensorflow.keras import Model, Sequential
 
@@ -119,7 +119,7 @@ class Block(Layer):
         self.norm_1 = LayerNormalization(epsilon=1e-6)
         self.norm_2 = LayerNormalization(epsilon=1e-6)
 
-        self.attn = MultiHeadSelfAttention(
+        self.attn = MHSA(
             num_heads=num_heads,
             embedding_dim=embedding_dim,
             qkv_bias=qkv_bias,

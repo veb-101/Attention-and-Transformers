@@ -14,13 +14,12 @@ def _make_divisible(v, divisor=8, min_value=None):
 
 
 class ConvLayer(Layer):
-    def __init__(self, num_filters=16, kernel_size=3, strides=2, use_activation=True, use_bn=True, **kwargs):
+    def __init__(self, num_filters=16, kernel_size=3, strides=2, use_activation=True, use_bn=True, use_bias=False, **kwargs):
         super().__init__(**kwargs)
-        self.conv = Conv2D(filters=num_filters, kernel_size=kernel_size, strides=strides, padding="same")
 
         self.conv_layer = Sequential(name="Conv_layer")
 
-        self.conv_layer.add(Conv2D(filters=num_filters, kernel_size=kernel_size, strides=strides, padding="same"))
+        self.conv_layer.add(Conv2D(filters=num_filters, kernel_size=kernel_size, strides=strides, padding="same", use_bias=use_bias))
 
         if use_bn:
             self.conv_layer.add(BatchNormalization())

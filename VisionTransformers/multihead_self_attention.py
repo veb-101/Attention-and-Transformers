@@ -53,8 +53,14 @@ class MultiHeadSelfAttentionEinSum(Layer):
         self.scale = self.projection_dim**0.5
         self.qkv_bias = qkv_bias
 
-        self.attn_dropout = Dropout(attention_drop)
-        self.linear_dropout = Dropout(linear_drop)
+        self.use_attention_drop = attention_drop > 0.0
+        self.use_linear_drop = linear_drop > 0.0
+
+        if self.use_attention_drop:
+            self.attn_dropout = Dropout(attention_drop)
+
+        if self.use_linear_drop:
+            self.linear_dropout = Dropout(linear_drop)
 
         ##### Notations #####
         # B/b: batch
@@ -82,7 +88,7 @@ class MultiHeadSelfAttentionEinSum(Layer):
 
     def call(self, inputs):
         # inputs --> Shape: (B, T, E)
-        
+
         # Old -- Transpose dimensions after operation
         # output_tensor = self.W_QKV(inputs)  # Shape: (B, T, N, P * 3)
         # output_tensor = tf.einsum("btnp->bntp", output_tensor)  # Shape: (B, N, T, P * 3)
@@ -98,13 +104,15 @@ class MultiHeadSelfAttentionEinSum(Layer):
 
         # Shape: (B, N, T, T)
         attention_matrix = tf.nn.softmax(tf.math.divide(attention_matrix, self.scale), axis=-1)
-        attention_matrix = self.attn_dropout(attention_matrix)
+        if self.use_attention_drop:
+            attention_matrix = self.attn_dropout(attention_matrix)
 
         # Shape: (B, N, T, T) * (B, N, T, P) --> (B, N, T, P)
         weighted_values = tf.einsum("...ij,...jk->...ik", attention_matrix, v)
 
         final = self.Wo(weighted_values)  # Shape: (B, N, T, P) * (P, N, E) --> (B, T, E)
-        final = self.linear_dropout(final)
+        if self.use_linear_drop:
+            final = self.linear_dropout(final)
 
         return final
 
@@ -172,8 +180,14 @@ class MultiHeadSelfAttention(Layer):
         self.qkv_W = Dense(units=3 * self.num_heads * self.projection_dim, name="W_expand_project", use_bias=self.qkv_bias)
         self.final_linear_project = Dense(units=self.embedding_dim, name="final_project", use_bias=self.qkv_bias)
 
-        self.attn_dropout = Dropout(attention_drop)
-        self.linear_dropout = Dropout(linear_drop)
+        self.use_attention_drop = attention_drop > 0.0
+        self.use_linear_drop = linear_drop > 0.0
+
+        if self.use_attention_drop:
+            self.attn_dropout = Dropout(attention_drop)
+
+        if self.use_linear_drop:
+            self.linear_dropout = Dropout(linear_drop)
 
     def call(self, input_mat):
 
@@ -195,7 +209,8 @@ class MultiHeadSelfAttention(Layer):
         # Shape: (#B, #heads, #tokens, #tokens)
         attention_matrix = tf.nn.softmax(q @ tf.transpose(k, perm=(0, 1, 3, 2)) / self.scale, axis=-1)
         # tf.print("attention_matrix:", tf.shape(attention_matrix))
-        attention_matrix = self.attn_dropout(attention_matrix)
+        if self.use_attention_drop:
+            attention_matrix = self.attn_dropout(attention_matrix)
 
         weighted_values = attention_matrix @ v  # Shape: (#B, #heads, #tokens, #projection_dim)
         # tf.print("Reweighting inputs:", tf.shape(weighted_values))
@@ -207,7 +222,8 @@ class MultiHeadSelfAttention(Layer):
         # tf.print("Concatenating values from all heads:", tf.shape(weighted_values))
 
         mhsa_output = self.final_linear_project(weighted_values)
-        mhsa_output = self.linear_dropout(mhsa_output)
+        if self.use_linear_drop:
+            final = self.linear_dropout(final)
         # tf.print("mhsa_output:", tf.shape(mhsa_output))
 
         return mhsa_output

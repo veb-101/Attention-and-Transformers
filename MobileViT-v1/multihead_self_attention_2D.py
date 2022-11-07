@@ -28,8 +28,14 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
         self.scale = self.projection_dim**0.5
         self.qkv_bias = qkv_bias
 
-        self.attn_dropout = Dropout(attention_drop)
-        self.linear_dropout = Dropout(linear_drop)
+        self.use_attention_drop = attention_drop > 0.0
+        self.use_linear_drop = linear_drop > 0.0
+
+        if self.use_attention_drop:
+            self.attn_dropout = Dropout(attention_drop)
+
+        if self.use_linear_drop:
+            self.linear_dropout = Dropout(linear_drop)
 
         ##### Notations (wrt paper) #####
         # B/b = batch
@@ -67,13 +73,17 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
 
         # Shape: (B, P, H, N, N)
         attention_matrix = tf.nn.softmax(tf.math.divide(attention_matrix, self.scale), axis=-1)
-        attention_matrix = self.attn_dropout(attention_matrix)
+
+        if self.use_attention_drop:
+            attention_matrix = self.attn_dropout(attention_matrix)
 
         # Shape: (B, P, H, N, N) * (B, P, H, N, P) --> (B, P, H, N, P)
         weighted_values = tf.einsum("...ij,...jk->...ik", attention_matrix, v)
 
         final = self.Wo(weighted_values)  # Shape: (B, P, H, N, E) * (E, H, D) --> (B, P, N, D)
-        final = self.linear_dropout(final)
+
+        if self.use_linear_drop:
+            final = self.linear_dropout(final)
 
         return final
 
@@ -92,6 +102,7 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
     @classmethod
     def from_config(cls, config):
         return cls(**config)
+
 
 if __name__ == "__main__":
 

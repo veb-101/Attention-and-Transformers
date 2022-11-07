@@ -1,0 +1,11 @@
+# Adding all the basic libraries
+tensorflow==2.10.0
+tensorflow-addons 
+livelossplot
+opencv-python
+Pillow
+scikit-learn
+pandas
+matplotlib
+scikit-image
+

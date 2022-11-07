@@ -1,7 +1,9 @@
 ## Attention mechanisms and Transformers
 
-* This repo is created for learning purposes.<br>
-* This goal of this repo is to host basic architecture and model traning code associated with the different attention mechanisms and transformer architecture.
+[![Python 3.10.4](https://img.shields.io/badge/Python-3.10.4-3776AB)](https://www.python.org/downloads/release/python-3104/) [![TensorFlow 2.10.0](https://img.shields.io/badge/TensorFlow-2.10.0-FF6F00?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/tag/v2.10.0) [![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)](https://www.tensorflow.org/)
+
+* This goal of this repository is to host basic architecture and model traning code associated with the different attention mechanisms and transformer architecture.
+* At the moment, I more interested in learning and recreating these new architectures from scratch than full-fledged training. For now, I'll just be training these models on small datasets.
 
 **Attention Mechanisms**
 

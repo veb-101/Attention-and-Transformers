@@ -95,7 +95,7 @@ class MobileViTBlock(Layer):
         self.fuse_local_global = ConvLayer(num_filters=self.out_filters, kernel_size=3, strides=1, use_bn=True, use_activation=True)
 
     def call(self, x):
-        H, W, C = tf.shape(x)[1], tf.shape(x)[2], tf.shape(x)[3]
+        H, W = tf.shape(x)[1], tf.shape(x)[2]
 
         local_representation = self.local_features_1(x)
         local_representation = self.local_features_2(local_representation)

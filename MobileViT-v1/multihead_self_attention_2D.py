@@ -45,7 +45,7 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
         # H/h = num_heads
         # E/e = projection_dim
 
-        # New Shape: (B, P, N, D) * (D, H, E * 3) --> (B, P, H, N, P * 3)
+        # New Shape: (B, P, N, D) * (D, H, E * 3) --> (B, P, H, N, E * 3)
         self.W_QKV = EinsumDense(
             "bpnd,dhe->bphne",
             output_shape=[None, self.num_heads, None, 3 * self.projection_dim],
@@ -63,12 +63,12 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
         """
         # inputs --> Shape: (B, P, N, D)
 
-        output_tensor = self.W_QKV(inputs)  # Shape: (B, P, H, N, P * 3)
+        output_tensor = self.W_QKV(inputs)  # Shape: (B, P, H, N, E * 3)
 
-        # Shape: (B, P, H, N, P) * 3
+        # Shape: (B, P, H, N, E) * 3
         q, k, v = tf.split(output_tensor, num_or_size_splits=3, axis=-1)
 
-        # Shape: (B, P, H, N, P) * (B, P, H, N, P) --> (B, P, H, N, N)
+        # Shape: (B, P, H, N, E) * (B, P, H, N, E) --> (B, P, H, N, N)
         attention_matrix = tf.einsum("...ij, ...kj-> ...ik", q, k)
 
         # Shape: (B, P, H, N, N)
@@ -77,7 +77,7 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
         if self.use_attention_drop:
             attention_matrix = self.attn_dropout(attention_matrix)
 
-        # Shape: (B, P, H, N, N) * (B, P, H, N, P) --> (B, P, H, N, P)
+        # Shape: (B, P, H, N, N) * (B, P, H, N, E) --> (B, P, H, N, E)
         weighted_values = tf.einsum("...ij,...jk->...ik", attention_matrix, v)
 
         final = self.Wo(weighted_values)  # Shape: (B, P, H, N, E) * (E, H, D) --> (B, P, N, D)

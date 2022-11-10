@@ -19,6 +19,8 @@ class ConvLayer(Layer):
 
         self.conv_layer = Sequential(name="Conv_layer")
 
+        use_bias = False if use_bn else True
+
         self.conv_layer.add(Conv2D(filters=num_filters, kernel_size=kernel_size, strides=strides, padding="same", use_bias=use_bias))
 
         if use_bn:

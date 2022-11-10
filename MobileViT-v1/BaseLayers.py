@@ -39,16 +39,18 @@ class InvertedResidualBlock(Layer):
         in_channels=32,
         out_channels=64,
         depthwise_stride=1,
-        expansion_channels=32,
+        expansion_factor=2,
         **kwargs,
     ):
         super().__init__(**kwargs)
 
         # Input Parameters
+
         self.num_in_channels = in_channels
-        self.num_out_channels = out_channels
+        self.num_out_channels = int(_make_divisible(out_channels, divisor=8))
+        self.expansion_channels = int(_make_divisible(expansion_factor * self.num_in_channels))
+
         self.depthwise_stride = depthwise_stride
-        self.expansion_channels = expansion_channels
 
         # Layer Attributes
         self.apply_expansion = self.expansion_channels > self.num_in_channels
@@ -58,16 +60,20 @@ class InvertedResidualBlock(Layer):
         self.sequential_block = Sequential()
 
         if self.apply_expansion:
-            self.sequential_block.add(Conv2D(filters=self.expansion_channels, kernel_size=1, strides=1, use_bias=False))
-            self.sequential_block.add(BatchNormalization())
-            self.sequential_block.add(ReLU(max_value=6.0))
+
+            self.sequential_block.add(ConvLayer(num_filters=self.expansion_channels, kernel_size=1, strides=1, use_activation=True, use_bn=True))
+            # self.sequential_block.add(Conv2D(filters=self.expansion_channels, kernel_size=1, strides=1, use_bias=False))
+            # self.sequential_block.add(BatchNormalization())
+            # self.sequential_block.add(ReLU(max_value=6.0))
 
         self.sequential_block.add(DepthwiseConv2D(kernel_size=3, strides=self.depthwise_stride, padding="same", use_bias=False))
         self.sequential_block.add(BatchNormalization())
-        self.sequential_block.add(ReLU(max_value=6.0))
+        self.sequential_block.add(Activation("swish"))
 
-        self.sequential_block.add(Conv2D(filters=self.num_out_channels, kernel_size=1, strides=1, use_bias=False))
-        self.sequential_block.add(BatchNormalization())
+        self.sequential_block.add(ConvLayer(num_filters=self.num_out_channels, kernel_size=1, strides=1, use_activation=False, use_bn=True))
+
+        # self.sequential_block.add(Conv2D(filters=self.num_out_channels, kernel_size=1, strides=1, use_bias=False))
+        # self.sequential_block.add(BatchNormalization())
 
     def call(self, data, **kwargs):
 

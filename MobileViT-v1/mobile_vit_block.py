@@ -95,24 +95,24 @@ class MobileViTBlock(Layer):
         self.fuse_local_global = ConvLayer(num_filters=self.out_filters, kernel_size=3, strides=1, use_bn=True, use_activation=True)
 
     def call(self, x):
-        H, W = tf.shape(x)[1], tf.shape(x)[2]
+        B, H, W = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
 
         local_representation = self.local_features_1(x)
         local_representation = self.local_features_2(local_representation)
 
-        # num_patches = tf.cast(tf.math.divide_no_nan(tf.shape(x)[1] * tf.shape(x)[2], self.patch_size), tf.int32)
+        num_patches = tf.cast((H * W) / self.patch_size, tf.int32)
 
         # Transformer as Convolution Steps
         # --------------------------------
         # # Unfolding
-        unfolded = Reshape((self.patch_size, -1, self.embedding_dim))(local_representation)
+        unfolded = tf.reshape(local_representation, (B, self.patch_size, -1, self.embedding_dim))
 
         # # Infomation sharing/mixing --> global representation
         global_representation = self.transformer_blocks(unfolded)
 
         # # Folding
-        folded = Reshape((H, W, self.embedding_dim))(global_representation)
-        # --------------------------------
+        folded = tf.reshape(global_representation, (B, H, W, self.embedding_dim))
+        # # --------------------------------
 
         # Fusion
         local_mix = self.local_features_3(folded)
@@ -124,11 +124,11 @@ class MobileViTBlock(Layer):
 
 if __name__ == "__main__":
     batch = 2
-    H = W = 16
-    C = 64
+    H = W = 32
+    C = 96
     P = 2 * 2
     L = 4
-    embedding_dim = 80
+    embedding_dim = 144
 
     mvitblk = MobileViTBlock(
         out_filters=C,

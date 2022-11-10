@@ -150,7 +150,7 @@ def build_mobileViT_XS():
 def build_mobileViT_XXS():
 
     out_channels = [16, 16, 24, 24, 48, 48, 64, 64, 80, 80, 320]
-    expansion_factor = 4
+    expansion_factor = 2
     tf_repeats = [2, 4, 3]
     tf_embedding_dims = [64, 80, 96]
 

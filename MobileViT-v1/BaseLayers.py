@@ -33,6 +33,7 @@ class ConvLayer(Layer):
         return self.conv_layer(x, **kwargs)
 
 
+# Code taken from: https://github.com/veb-101/Training-Mobilenets-From-Scratch/blob/main/mobilenet_v2.py
 class InvertedResidualBlock(Layer):
     def __init__(
         self,
@@ -60,20 +61,13 @@ class InvertedResidualBlock(Layer):
         self.sequential_block = Sequential()
 
         if self.apply_expansion:
-
             self.sequential_block.add(ConvLayer(num_filters=self.expansion_channels, kernel_size=1, strides=1, use_activation=True, use_bn=True))
-            # self.sequential_block.add(Conv2D(filters=self.expansion_channels, kernel_size=1, strides=1, use_bias=False))
-            # self.sequential_block.add(BatchNormalization())
-            # self.sequential_block.add(ReLU(max_value=6.0))
 
         self.sequential_block.add(DepthwiseConv2D(kernel_size=3, strides=self.depthwise_stride, padding="same", use_bias=False))
         self.sequential_block.add(BatchNormalization())
         self.sequential_block.add(Activation("swish"))
 
         self.sequential_block.add(ConvLayer(num_filters=self.num_out_channels, kernel_size=1, strides=1, use_activation=False, use_bn=True))
-
-        # self.sequential_block.add(Conv2D(filters=self.num_out_channels, kernel_size=1, strides=1, use_bias=False))
-        # self.sequential_block.add(BatchNormalization())
 
     def call(self, data, **kwargs):
 

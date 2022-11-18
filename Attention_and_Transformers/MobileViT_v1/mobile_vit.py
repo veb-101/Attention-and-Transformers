@@ -1,22 +1,46 @@
+from dataclasses import dataclass
 import tensorflow as tf
 from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
 
-from BaseLayers import ConvLayer, InvertedResidualBlock
-from mobile_vit_block import MobileViTBlock
+from .BaseLayers import ConvLayer, InvertedResidualBlock
+from .mobile_vit_block import MobileViTBlock
 
 
 def MobileViT(
-    out_channels,
-    expansion_factor,
-    tf_repeats,
-    tf_embedding_dims,
-    linear_drop=0.0,
-    attention_drop=0.2,
-    num_classes=1000,
-    input_shape=(256, 256, 3),
-    model_type="S",
+    out_channels: list,
+    expansion_factor: int,
+    tf_repeats: list,
+    tf_embedding_dims: list,
+    linear_drop: float = 0.0,
+    attention_drop: float = 0.2,
+    num_classes: int = 1000,
+    input_shape: tuple = (256, 256, 3),
+    model_type: str = "S",
 ):
+
+    """
+    Arguments
+    --------
+        out_channel: (list)  Output channels of each layer
+
+        expansion_factor: (int)   Inverted residual block -> Bottelneck expansion size
+
+        tf_repeats: (list)  Number of time to repeat each transformer block
+
+        tf_embedding_dims: (list)  Embedding dimension used in each transformer block
+
+        num_classes: (int)   Number of output classes
+
+        input_shape: (tuple) Input shape -> H, W, C
+
+        model_type: (str)   Model to create
+
+        linear_drop: (float) Dropout rate for Dense layers
+
+        attention_drop: (float) Dropout rate for the attention matrix
+
+    """
 
     input_layer = Input(shape=input_shape)
 
@@ -125,41 +149,84 @@ def MobileViT(
     return model
 
 
-def build_mobileViT_S():
-
+@dataclass(frozen=True)
+class config_MobileViT_S:
     out_channels = [16, 32, 64, 64, 96, 96, 128, 128, 160, 160, 640]
     expansion_factor = 4
     tf_repeats = [2, 4, 3]
     tf_embedding_dims = [144, 192, 240]
 
-    model = MobileViT(out_channels, expansion_factor, tf_repeats, tf_embedding_dims, num_classes=1000, input_shape=(256, 256, 3), model_type="S")
-    return model
 
-
-def build_mobileViT_XS():
-
-    out_channels = [16, 32, 48, 48, 64, 64, 80, 80, 96, 96, 384]
+@dataclass(frozen=True)
+class config_MobileViT_XS:
+    out_channels = [16, 32, 64, 64, 96, 96, 128, 128, 160, 160, 640]
     expansion_factor = 4
     tf_repeats = [2, 4, 3]
-    tf_embedding_dims = [96, 120, 144]
-
-    model = MobileViT(out_channels, expansion_factor, tf_repeats, tf_embedding_dims, num_classes=1000, input_shape=(256, 256, 3), model_type="XS")
-    return model
+    tf_embedding_dims = [144, 192, 240]
 
 
-def build_mobileViT_XXS():
-
-    out_channels = [16, 16, 24, 24, 48, 48, 64, 64, 80, 80, 320]
-    expansion_factor = 2
+@dataclass(frozen=True)
+class config_MobileViT_XXS:
+    out_channels = [16, 32, 64, 64, 96, 96, 128, 128, 160, 160, 640]
+    expansion_factor = 4
     tf_repeats = [2, 4, 3]
-    tf_embedding_dims = [64, 80, 96]
+    tf_embedding_dims = [144, 192, 240]
 
-    model = MobileViT(out_channels, expansion_factor, tf_repeats, tf_embedding_dims, num_classes=1000, input_shape=(256, 256, 3), model_type="XXS")
+
+def build_MobileVit_V1(model_type: str = "S", num_classes: int = 1000, input_shape: tuple = (None, None, 3), **kwargs):
+
+    """
+    Create MobileVit-V1 Classification models
+
+    Arguments
+    --------
+        model_type: (str)   MobileVit version to create. Options: S, XS, XSS
+
+        num_classes: (int)   Number of output classes
+
+        input_shape: (tuple) Input shape -> H, W, C
+
+    Additional arguments:
+    ---------------------
+
+        linear_drop: (float) Dropout rate for Dense layers
+
+        attention_drop: (float) Dropout rate for the attention matrix
+
+    """
+
+    if model_type not in ["S", "XS", "XSS"]:
+        raise ValueError("Bad Input. 'model_type' should one of ['S', 'XS', 'XXS']")
+
+    if model_type == "S":
+        config = config_MobileViT_S()
+    elif model_type == "S":
+        config = config_MobileViT_XS()
+    else:
+        config = config_MobileViT_XXS()
+
+    model = MobileViT(
+        out_channels=config.out_channels,  # (list)  Output channels of each layer
+        expansion_factor=config.expansion_factor,  # (int)   Inverted residual block -> Bottelneck expansion size
+        tf_repeats=config.tf_repeats,  # (list)  Number of time to repeat each transformer block
+        tf_embedding_dims=config.tf_embedding_dims,  # (list)  Embedding dimension used in each transformer block
+        num_classes=num_classes,  # (int)   Number of output classes
+        input_shape=input_shape,  # (tuple) Input shape -> H, W, C
+        model_type=model_type,  # (str)   Model to create
+        **kwargs,
+    )
+
     return model
 
 
 if __name__ == "__main__":
 
-    model = build_mobileViT_XXS()
+    model = build_MobileVit_V1(
+        model_type="S",  # "XS", "XXS"
+        input_shape=(256, 256, 3),  # (None, None, 3)
+        num_classes=1000,
+        # linear_drop=0.2,
+        # attention_drop=0.2,
+    )
 
     model.summary()

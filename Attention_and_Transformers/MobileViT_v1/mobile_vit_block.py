@@ -1,9 +1,9 @@
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Layer, Dropout, Reshape, Dense, LayerNormalization, Concatenate
+from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization, Concatenate
 
-from BaseLayers import ConvLayer
-from multihead_self_attention_2D import MultiHeadSelfAttentionEinSum2D as MHSA
+from .BaseLayers import ConvLayer
+from .multihead_self_attention_2D import MultiHeadSelfAttentionEinSum2D as MHSA
 
 tf.random.set_seed(1)
 tf.keras.utils.set_random_seed(1)

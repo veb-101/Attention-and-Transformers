@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Layer, Conv2D, BatchNormalization, Activation, ReLU, DepthwiseConv2D
+from tensorflow.keras.layers import Layer, Conv2D, BatchNormalization, Activation, DepthwiseConv2D
 
 # https://www.tensorflow.org/guide/mixed_precision#ensuring_gpu_tensor_cores_are_used
 def _make_divisible(v, divisor=8, min_value=None):

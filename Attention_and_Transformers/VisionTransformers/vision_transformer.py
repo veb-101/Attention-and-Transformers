@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-# from multihead_self_attention import MultiHeadSelfAttention as MHSA
-from multihead_self_attention import MultiHeadSelfAttentionEinSum as MHSA
+# from .multihead_self_attention import MultiHeadSelfAttention_basic as MHSA
+from .multihead_self_attention import MultiHeadSelfAttentionEinSum as MHSA
 from tensorflow.keras.layers import Layer, Conv2D, Dropout, Dense, LayerNormalization
 from tensorflow.keras import Model, Sequential
 
@@ -288,21 +288,14 @@ if __name__ == "__main__":
 
     class Config:
         IMAGE_SIZE = 32
-
         EMBEDDING_DIM = 256
         MLP_RATIO = 2.0
         NUM_HEADS = 8
         DEPTH = 6
         PATCH_SIZE = 4
-
         N_CLASSES = 10
         LINEAR_DROP = 0.2
         ATTENTION_DROP = 0.0
-        LEARNING_RATE = 3e-4
-
-        BATCH_SIZE = 256
-        NUM_EPOCHS = 100
-        WEIGHT_DECAY = 0.01
 
     model = VisionTransformer(
         img_size=Config.IMAGE_SIZE,

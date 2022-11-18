@@ -133,7 +133,7 @@ class MultiHeadSelfAttentionEinSum(Layer):
         return cls(**config)
 
 
-class MultiHeadSelfAttention(Layer):
+class MultiHeadSelfAttention_basic(Layer):
     """
     Apply Multi-Head Self Attention.
 
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     proj_dim = embedding_dim // num_heads
 
     print("Normal")
-    lal = MultiHeadSelfAttention(num_heads=num_heads, embedding_dim=embedding_dim, projection_dim=proj_dim, qkv_bias=use_bias, name="mhsa")
+    lal = MultiHeadSelfAttention_basic(num_heads=num_heads, embedding_dim=embedding_dim, projection_dim=proj_dim, qkv_bias=use_bias, name="mhsa")
 
     inputs = tf.random.normal((batch_dims, input_dims, embedding_dim))
     _ = lal(inputs)

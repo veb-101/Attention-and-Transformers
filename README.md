@@ -17,4 +17,5 @@
 | **# No.** | **Models**         | **Paper**                                                          |
 |:---------:|:------------------:|:------------------------------------------------------------------:|
 | 1         | [Vision Transformer](https://github.com/veb-101/Attention-and-Transformers/blob/main/VisionTransformers/vision_transformer.py) | [An Image is Worth 16x16 Words:](https://arxiv.org/abs/2010.11929) |
-| 2         | MobileViT - V1 (under development)     | [MobileViT V1](https://arxiv.org/abs/2110.02178)                   |
+| 2         | [MobileViT-V1](https://github.com/veb-101/Attention-and-Transformers/blob/main/MobileViT-v1/mobile_vit.py)     | [MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer](https://arxiv.org/abs/2110.02178)                   |
+| 3         | MobileViT-V2 (under development)| [Separable Self-attention for Mobile Vision Transformers](https://arxiv.org/abs/2206.02680)                   |

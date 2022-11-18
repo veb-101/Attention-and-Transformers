@@ -1,3 +1,6 @@
 *.pyc
 __pycache__
 .ipynb_checkpoints
+Attention_and_Transformers.egg-info/*
+dist/*
+build/*

@@ -23,7 +23,7 @@ pip install git+https://github.com/veb-101/Attention-and-Transformers.git
 
 ```bash
 git clone https://github.com/veb-101/Attention-and-Transformers.git atf
-cd  atf
+cd atf
 python setup.py install
 ```
 

@@ -5,17 +5,31 @@
 * This goal of this repository is to host basic architecture and model traning code associated with the different attention mechanisms and transformer architecture.
 * At the moment, I more interested in learning and recreating these new architectures from scratch than full-fledged training. For now, I'll just be training these models on small datasets.
 
-#### Setup
+#### Installation
 
-**Installation**
+* Using pip to install from [pypi](https://pypi.org/project/Attention-and-Transformers/)
 
 ```bash
-pip install Attention-and-Transformers==0.0.1
+pip install Attention-and-Transformers
+```
+
+* Using pip to install latest version from github   
+
+```bash
+pip install git+https://github.com/veb-101/Attention-and-Transformers.git
+```
+
+* Local clone and install
+
+```bash
+git clone https://github.com/veb-101/Attention-and-Transformers.git atf
+cd  atf
+python setup.py install
 ```
 
 **Test Installation**
 
-```
+```bash
 python load_test.py
 ```
 

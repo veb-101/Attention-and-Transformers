@@ -9,8 +9,8 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 
-__version__ = "0.0.1"
-DESCRIPTION = "Building attention mechanisms and Transformer models from scratch. Alias ATF. https://github.com/veb-101/Attention-and-Transformers"
+__version__ = "0.0.2"
+DESCRIPTION = "Building attention mechanisms and Transformer models from scratch. Alias ATF."
 
 # Setting up
 setup(

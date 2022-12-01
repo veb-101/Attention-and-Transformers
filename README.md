@@ -13,7 +13,7 @@
 pip install Attention-and-Transformers
 ```
 
-* Using pip to install latest version from github   
+* Using pip to install latest version from github
 
 ```bash
 pip install git+https://github.com/veb-101/Attention-and-Transformers.git
@@ -100,7 +100,7 @@ python load_test.py
 <tr>
 <td style="text-align:center">2</td>
 <td style="text-align:center">
-<a href="https://github.com/veb-101/Attention-and-Transformers/blob/main/Attention_and_Transformers/MobileViT_v1/mobile_vit.py">MobileViT-V1</a>
+<a href="https://github.com/veb-101/Attention-and-Transformers/blob/main/Attention_and_Transformers/MobileViT_v1/mobile_vit_v1.py">MobileViT-V1</a>
 </td>
 <td style="text-align:center">
 <a href="https://arxiv.org/abs/2110.02178">MobileViT: Light-weight, General-purpose, and Mobile-friendly Vision Transformer</a>

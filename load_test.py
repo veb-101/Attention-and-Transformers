@@ -1,6 +1,6 @@
 import tensorflow as tf
-from Attention_and_Transformers import VisionTransformers
-from Attention_and_Transformers import MobileViT_v1
+from ATF import VisionTransformers
+from ATF import MobileViT_v1
 
 
 # Test ViT
@@ -15,5 +15,5 @@ model.summary()
 
 
 # Test MobileViT-V1
-model = MobileViT_v1.build_MobileVit_V1(model_type="S")
+model = MobileViT_v1.build_MobileViT_V1(model_type="S")
 model.summary()

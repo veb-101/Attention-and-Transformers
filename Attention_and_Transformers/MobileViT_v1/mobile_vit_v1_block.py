@@ -74,7 +74,9 @@ class MobileViTBlock(Layer):
 
         # local_feature_extractor 1 and 2
         self.local_features_1 = ConvLayer(num_filters=self.out_filters, kernel_size=3, strides=1, use_bn=True, use_activation=True)
-        self.local_features_2 = ConvLayer(num_filters=self.embedding_dim, kernel_size=1, strides=1, use_bn=False, use_activation=False)
+        self.local_features_2 = ConvLayer(
+            num_filters=self.embedding_dim, kernel_size=1, strides=1, use_bn=False, use_activation=False, use_bias=False
+        )
 
         # Repeated transformer blocks
         self.transformer_blocks = Sequential(
@@ -88,6 +90,7 @@ class MobileViTBlock(Layer):
                 for _ in range(self.transformer_repeats)
             ]
         )
+        self.norm = LayerNormalization(epsilon=1e-6)
 
         # Fusion blocks
         self.local_features_3 = ConvLayer(num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=True)
@@ -100,7 +103,7 @@ class MobileViTBlock(Layer):
         local_representation = self.local_features_1(x)
         local_representation = self.local_features_2(local_representation)
 
-        num_patches = tf.cast((H * W) / self.patch_size, tf.int32)
+        # num_patches = tf.cast((H * W) / self.patch_size, tf.int32)
 
         # Transformer as Convolution Steps
         # --------------------------------
@@ -109,6 +112,7 @@ class MobileViTBlock(Layer):
 
         # # Infomation sharing/mixing --> global representation
         global_representation = self.transformer_blocks(unfolded)
+        global_representation = self.norm(global_representation)
 
         # # Folding
         folded = tf.reshape(global_representation, (B, H, W, self.embedding_dim))

@@ -96,6 +96,8 @@ def unfolding(nn, patch_h=2, patch_w=2):
 
     info_dict = {
         "orig_size": (H, W),
+        "batch_size": B,
+        "dim": D,
         "interpolate": interpolate,
         "num_patches_w": num_patch_w,
         "num_patches_h": num_patch_h,
@@ -114,8 +116,8 @@ def folding(nn, info_dict: dict, patch_h=2, patch_w=2):
         D/d = embedding_dim
     """
 
-    B, D = tf.shape(nn)[0], tf.shape(nn)[3]
-
+    B = info_dict["batch_size"]
+    D = info_dict["dim"]
     num_patch_h = info_dict["num_patches_h"]
     num_patch_w = info_dict["num_patches_w"]
 

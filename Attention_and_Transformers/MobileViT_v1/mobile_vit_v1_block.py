@@ -55,6 +55,12 @@ class Transformer(Layer):
 # https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/modules/mobilevit_block.py#L186
 def unfolding(nn, patch_h=2, patch_w=2):
     """
+    ### Notations (wrt paper) ###
+        B/b = batch
+        P/p = patch_size
+        N/n = number of patches
+        D/d = embedding_dim
+
     H, W
     [                            [
         [1, 2, 3, 4],     Goal      [1, 3, 9, 11],
@@ -63,7 +69,8 @@ def unfolding(nn, patch_h=2, patch_w=2):
         [13, 14, 15, 16],           [6, 8, 14, 16]
     ]                            ]
     """
-    B, H, W, C = tf.shape(nn)[0], tf.shape(nn)[1], tf.shape(nn)[2], tf.shape(nn)[3]
+
+    B, H, W, D = tf.shape(nn)[0], tf.shape(nn)[1], tf.shape(nn)[2], tf.shape(nn)[3]
     patch_area = int(patch_h * patch_w)
 
     num_patch_h, num_patch_w = int(tf.math.ceil(H / patch_h)), int(tf.math.ceil(W / patch_w))
@@ -75,9 +82,16 @@ def unfolding(nn, patch_h=2, patch_w=2):
         nn = tf.image.resize(nn, [num_patch_h * patch_h, num_patch_w * patch_w], method="bilinear")
         interpolate = True
 
-    reshaped_fm = tf.reshape(nn, (B * num_patch_h, patch_h, num_patch_w, patch_w * C))
+    # [B, H, W, D] --> [B*nh, ph, nw, pw*D]
+    reshaped_fm = tf.reshape(nn, (B * num_patch_h, patch_h, num_patch_w, patch_w * D))
+
+    # [B*nh, ph, nw, pw*D] --> [B*nh, nw, ph, pw*D]
     transposed_fm = tf.transpose(reshaped_fm, perm=[0, 2, 1, 3])
-    reshaped_fm = tf.reshape(transposed_fm, (B, num_patches, patch_area, C))
+
+    # [B*nh, nw, ph, pw*D] --> [B, N, P, D]
+    reshaped_fm = tf.reshape(transposed_fm, (B, num_patches, patch_area, D))
+
+    # [B, N, P, D] --. [B, P, N, D]
     transposed_fm = tf.transpose(reshaped_fm, perm=[0, 2, 1, 3])
 
     info_dict = {
@@ -92,23 +106,30 @@ def unfolding(nn, patch_h=2, patch_w=2):
 
 # https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/modules/mobilevit_block.py#L233
 def folding(nn, info_dict: dict, patch_h=2, patch_w=2):
+    """
+    ### Notations (wrt paper) ###
+        B/b = batch
+        P/p = patch_size
+        N/n = number of patches
+        D/d = embedding_dim
+    """
 
-    B, C = tf.shape(nn)[0], tf.shape(nn)[3]
+    B, D = tf.shape(nn)[0], tf.shape(nn)[3]
 
     num_patch_h = info_dict["num_patches_h"]
     num_patch_w = info_dict["num_patches_w"]
 
-    # [B, P, N C] --> [B, N, P, C]
+    # [B, P, N D] --> [B, N, P, D]
     nn = tf.transpose(nn, perm=(0, 2, 1, 3))
 
-    # [B, N, P, C] --> [B*nh, nw, ph, pw*C]
-    nn = tf.reshape(nn, (B * num_patch_h, num_patch_w, patch_h, patch_w * C))
+    # [B, N, P, D] --> [B*nh, nw, ph, pw*D]
+    nn = tf.reshape(nn, (B * num_patch_h, num_patch_w, patch_h, patch_w * D))
 
-    # [B*nh, nw, ph, pw*C] --> [B*nh, ph, nw, pw*C]
+    # [B*nh, nw, ph, pw*D] --> [B*nh, ph, nw, pw*D]
     nn = tf.transpose(nn, perm=(0, 2, 1, 3))
 
-    # [B*nh, ph, nw, pw*C] --> [B, nh*ph, nw,pw, C]
-    nn = tf.reshape(nn, (B, num_patch_h * patch_h, num_patch_w * patch_w, C))
+    # [B*nh, ph, nw, pw*D] --> [B, nh*ph, nw, pw, D]
+    nn = tf.reshape(nn, (B, num_patch_h * patch_h, num_patch_w * patch_w, D))
 
     if info_dict["interpolate"]:
         nn = tf.image.resize(nn, size=info_dict["orig_size"])

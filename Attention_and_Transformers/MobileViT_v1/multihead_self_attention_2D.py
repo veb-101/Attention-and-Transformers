@@ -61,7 +61,8 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
         So the first pixel in each patch, only attends to the pixel at similar position in other patches.
         For visual reference, check the diagram on page 5 and 17 in the paper.
         """
-        # inputs --> Shape: (B, P, N, D)
+
+        # Inputs Shape --> (B, P, N, D)
 
         output_tensor = self.W_QKV(inputs)  # Shape: (B, P, H, N, E * 3)
 
@@ -95,6 +96,8 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
                 "embedding_dim": self.embedding_dim,
                 "projection_dim": self.projection_dim,
                 "qkv_bias": self.qkv_bias,
+                "attention_drop": self.attention_drop,
+                "linear_drop": self.linear_drop,
             }
         )
         return config

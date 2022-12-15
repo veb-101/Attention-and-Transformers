@@ -1,9 +1,9 @@
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization, Concatenate
+from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization
 
 from .BaseLayers import ConvLayer
-from .multihead_self_attention_2D import MultiHeadSelfAttentionEinSum2D as MHSA
+from .linear_attention import LinearSelfAttention as LSA
 
 tf.random.set_seed(1)
 tf.keras.utils.set_random_seed(1)
@@ -12,7 +12,6 @@ tf.keras.utils.set_random_seed(1)
 class Transformer(Layer):
     def __init__(
         self,
-        num_heads: int = 4,
         embedding_dim: int = 90,
         qkv_bias: bool = True,
         mlp_ratio: float = 2.0,
@@ -25,8 +24,7 @@ class Transformer(Layer):
         self.norm_1 = LayerNormalization(epsilon=1e-6)
         self.norm_2 = LayerNormalization(epsilon=1e-6)
 
-        self.attn = MHSA(
-            num_heads=num_heads,
+        self.attn = LSA(
             embedding_dim=embedding_dim,
             qkv_bias=qkv_bias,
             attention_drop=attention_drop,
@@ -138,14 +136,13 @@ def folding(nn, info_dict: dict, patch_h=2, patch_w=2):
     return nn
 
 
-class MobileViTBlock(Layer):
+class MobileViT_V2_Block(Layer):
     def __init__(
         self,
         out_filters=64,
         embedding_dim=90,
         patch_size=(2, 2),
         transformer_repeats=2,
-        num_heads=4,
         attention_drop=0.0,
         linear_drop=0.0,
         **kwargs,
@@ -154,20 +151,17 @@ class MobileViTBlock(Layer):
 
         self.out_filters = out_filters
         self.embedding_dim = embedding_dim
-        self.patch_size_h, self.patch_size_w = patch_size
+        self.patch_size_h, self.patch_size_w = patch_size if isinstance(patch_size, tuple) else (patch_size // 2, patch_size // 2)
         self.transformer_repeats = transformer_repeats
-        self.num_heads = num_heads
 
         # local_feature_extractor 1 and 2
         self.local_features_1 = ConvLayer(num_filters=self.out_filters, kernel_size=3, strides=1, use_bn=True, use_activation=True)
-        self.local_features_2 = ConvLayer(
-            num_filters=self.embedding_dim, kernel_size=1, strides=1, use_bn=False, use_activation=False, use_bias=False
-        )
+        self.local_features_2 = ConvLayer(num_filters=self.embedding_dim, kernel_size=1, strides=1, use_bn=False, use_activation=False)
+        self.local_rep = Sequential(layers=[self.local_features_1, self.local_features_2])
 
         layers = [
             Transformer(
                 embedding_dim=self.embedding_dim,
-                num_heads=self.num_heads,
                 linear_drop=linear_drop,
                 attention_drop=attention_drop,
             )
@@ -179,14 +173,11 @@ class MobileViTBlock(Layer):
         # Repeated transformer blocks
         self.transformer_blocks = Sequential(layers=layers)
 
-        # Fusion blocks
-        self.local_features_3 = ConvLayer(num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=True)
-        self.concat = Concatenate(axis=-1)
-        self.fuse_local_global = ConvLayer(num_filters=self.out_filters, kernel_size=3, strides=1, use_bn=True, use_activation=True)
+        # Projection block
+        self.conv_proj = ConvLayer(num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=False)
 
     def call(self, x):
-        local_representation = self.local_features_1(x)
-        local_representation = self.local_features_2(local_representation)
+        local_representation = self.local_rep(x)
 
         # Transformer as Convolution Steps
         # --------------------------------
@@ -200,12 +191,10 @@ class MobileViTBlock(Layer):
         folded = folding(global_representation, info_dict=info_dict, patch_h=self.patch_size_h, patch_w=self.patch_size_w)
         # # --------------------------------
 
-        # Fusion
-        local_mix = self.local_features_3(folded)
-        fusion = self.concat([local_mix, x])
-        fusion = self.fuse_local_global(fusion)
+        # Projection
+        final = self.conv_proj(folded)
 
-        return fusion
+        return final
 
 
 if __name__ == "__main__":
@@ -216,7 +205,7 @@ if __name__ == "__main__":
     L = 4
     embedding_dim = 144
 
-    mvitblk = MobileViTBlock(
+    mvitblk = MobileViT_V2_Block(
         out_filters=C,
         embedding_dim=embedding_dim,
         patch_size=P,

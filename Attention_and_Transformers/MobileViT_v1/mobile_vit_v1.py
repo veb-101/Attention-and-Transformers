@@ -7,7 +7,7 @@ from .BaseLayers import ConvLayer, InvertedResidualBlock
 from .mobile_vit_v1_block import MobileViTBlock
 
 
-def MobileViT(
+def MobileViT_V1(
     out_channels: list,
     expansion_factor: int,
     tf_repeats: list,
@@ -213,7 +213,7 @@ def build_MobileViT_V1(model_type: str = "S", num_classes: int = 1000, input_sha
     else:
         raise ValueError("Bad Input. 'model_type' should one of ['S', 'XS', 'XXS']")
 
-    model = MobileViT(
+    model = MobileViT_V1(
         out_channels=config.out_channels,  # (list)  Output channels of each layer
         expansion_factor=config.expansion_factor,  # (int)   Inverted residual block -> Bottelneck expansion size
         tf_repeats=config.tf_repeats,  # (list)  Number of time to repeat each transformer block

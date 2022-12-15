@@ -50,6 +50,7 @@ python load_test.py
 </tr>
 </thead>
 <tbody>
+
 <tr>
 <td style="text-align:center">1</td>
 <td style="text-align:center">
@@ -66,6 +67,15 @@ python load_test.py
 </td>
 <td style="text-align:center">
 <a href="https://arxiv.org/abs/2110.02178">MobileViT V1</a>
+</td>
+</tr>
+<tr>
+<td style="text-align:center">2</td>
+<td style="text-align:center">
+<a href="https://github.com/veb-101/Attention-and-Transformers/blob/main/Attention_and_Transformers/MobileViT_v2/linear_attention.py">Separable Self Attention</a>
+</td>
+<td style="text-align:center">
+<a href="https://arxiv.org/abs/2206.02680">MobileViT V2</a>
 </td>
 </tr>
 </tbody>

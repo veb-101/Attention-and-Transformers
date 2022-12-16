@@ -9,7 +9,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 
-__version__ = "0.0.4"
+__version__ = "0.0.6"
 DESCRIPTION = "Building attention mechanisms and Transformer models from scratch. Alias ATF."
 
 # Setting up

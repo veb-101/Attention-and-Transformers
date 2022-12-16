@@ -1,6 +1,5 @@
-from setuptools import setup, find_packages
-from codecs import open
 from os import path
+from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
 
@@ -9,7 +8,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 
-__version__ = "0.0.6"
+__version__ = "0.0.9"
 DESCRIPTION = "Building attention mechanisms and Transformer models from scratch. Alias ATF."
 
 # Setting up
@@ -46,9 +45,8 @@ setup(
     keywords="tensorflow keras attention transformers",
     install_requires=[
         "tensorflow-macos;platform_system=='Darwin'",
-        "tensorflow==2.10.0;platform_system!='Darwin'",
+        "tensorflow;platform_system!='Darwin'",
         "tensorflow-addons;platform_machine!='aarch64' and platform_machine!='aarch32'",
-        "tensorflow-datasets",
         "livelossplot",
         "Pillow",
         "opencv-contrib-python",

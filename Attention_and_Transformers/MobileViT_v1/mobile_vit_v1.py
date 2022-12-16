@@ -4,10 +4,10 @@ from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dropout, Dense
 
 from .BaseLayers import ConvLayer, InvertedResidualBlock
-from .mobile_vit_v1_block import MobileViTBlock
+from .mobile_vit_v1_block import MobileViTBlock_v1
 
 
-def MobileViT_V1(
+def MobileViT_v1(
     out_channels: list,
     expansion_factor: int,
     tf_repeats: list,
@@ -98,7 +98,7 @@ def MobileViT_V1(
         name="block-3-IR1",
     )(out)
 
-    out = MobileViTBlock(
+    out = MobileViTBlock_v1(
         out_filters=out_channels[5],
         embedding_dim=tf_embedding_dims[0],
         transformer_repeats=tf_repeats[0],
@@ -116,7 +116,7 @@ def MobileViT_V1(
         name="block-4-IR1",
     )(out)
 
-    out = MobileViTBlock(
+    out = MobileViTBlock_v1(
         out_filters=out_channels[7],
         embedding_dim=tf_embedding_dims[1],
         transformer_repeats=tf_repeats[1],
@@ -134,7 +134,7 @@ def MobileViT_V1(
         name="block-5-IR1",
     )(out)
 
-    out = MobileViTBlock(
+    out = MobileViTBlock_v1(
         out_filters=out_channels[9],
         embedding_dim=tf_embedding_dims[2],
         transformer_repeats=tf_repeats[2],
@@ -182,10 +182,10 @@ class config_MobileViT_XXS:
     tf_embedding_dims = [64, 80, 96]
 
 
-def build_MobileViT_V1(model_type: str = "S", num_classes: int = 1000, input_shape: tuple = (None, None, 3), **kwargs):
+def build_MobileViT_v1(model_type: str = "S", num_classes: int = 1000, input_shape: tuple = (None, None, 3), **kwargs):
 
     """
-    Create MobileViT-V1 Classification models
+    Create MobileViT-v1 Classification models
 
     Arguments
     --------
@@ -213,7 +213,7 @@ def build_MobileViT_V1(model_type: str = "S", num_classes: int = 1000, input_sha
     else:
         raise ValueError("Bad Input. 'model_type' should one of ['S', 'XS', 'XXS']")
 
-    model = MobileViT_V1(
+    model = MobileViT_v1(
         out_channels=config.out_channels,  # (list)  Output channels of each layer
         expansion_factor=config.expansion_factor,  # (int)   Inverted residual block -> Bottelneck expansion size
         tf_repeats=config.tf_repeats,  # (list)  Number of time to repeat each transformer block
@@ -229,7 +229,7 @@ def build_MobileViT_V1(model_type: str = "S", num_classes: int = 1000, input_sha
 
 if __name__ == "__main__":
 
-    model = build_MobileViT_V1(
+    model = build_MobileViT_v1(
         model_type=r"S",  # "XS", "XXS"
         input_shape=(256, 256, 3),  # (None, None, 3)
         num_classes=1000,

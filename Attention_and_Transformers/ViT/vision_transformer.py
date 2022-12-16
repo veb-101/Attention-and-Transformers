@@ -36,7 +36,7 @@ class PatchEmbedding(Layer):
 
     """
 
-    def __init__(self, *, img_size, patch_size, embedding_dim=512, **kwargs):
+    def __init__(self, *, img_size: int, patch_size: int, embedding_dim: int = 512, **kwargs):
         super().__init__(**kwargs)
         self.img_size = img_size
         self.patch_size = patch_size
@@ -202,16 +202,16 @@ class VisionTransformer(Model):
 
     def __init__(
         self,
-        img_size=224,
-        patch_size=16,
-        n_classes=10,
-        embedding_dim=768,
-        depth=2,
-        num_heads=2,
-        mlp_ratio=2.0,
-        qkv_bias=True,
-        linear_drop=0,
-        attention_drop=0.0,
+        img_size: int = 224,
+        patch_size: int = 16,
+        n_classes: int = 10,
+        embedding_dim: int = 768,
+        depth: int = 2,
+        num_heads: int = 2,
+        mlp_ratio: float = 2.0,
+        qkv_bias: bool = True,
+        linear_drop: float = 0.0,
+        attention_drop: float = 0.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -280,10 +280,6 @@ class VisionTransformer(Model):
 
 if __name__ == "__main__":
 
-    # gpus = tf.config.list_physical_devices("GPU")
-    # if gpus:
-    #     tf.config.set_logical_device_configuration(gpus[0], [tf.config.LogicalDeviceConfiguration(memory_limit=5292)])
-
     class Config:
         IMAGE_SIZE = 32
         EMBEDDING_DIM = 256
@@ -307,7 +303,5 @@ if __name__ == "__main__":
         attention_drop=Config.ATTENTION_DROP,
     )
 
-    a = tf.random.normal((1, Config.IMAGE_SIZE, Config.IMAGE_SIZE, 3))
-
-    print(model(a).shape)
+    model.build((None, None, None, 3))
     model.summary()

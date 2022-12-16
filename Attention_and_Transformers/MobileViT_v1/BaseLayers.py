@@ -1,9 +1,10 @@
+from typing import Union
 import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Layer, Conv2D, BatchNormalization, Activation, DepthwiseConv2D
 
 # https://www.tensorflow.org/guide/mixed_precision#ensuring_gpu_tensor_cores_are_used
-def _make_divisible(v, divisor=8, min_value=None):
+def _make_divisible(v: Union[int, float], divisor: Union[int, float] = 8, min_value: Union[int, float] = None):
     if min_value is None:
         min_value = divisor
     new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
@@ -14,7 +15,16 @@ def _make_divisible(v, divisor=8, min_value=None):
 
 
 class ConvLayer(Layer):
-    def __init__(self, num_filters=16, kernel_size=3, strides=2, use_activation=True, use_bn=True, use_bias=None, **kwargs):
+    def __init__(
+        self,
+        num_filters: int = 16,
+        kernel_size: int = 3,
+        strides: int = 2,
+        use_activation: bool = True,
+        use_bn: bool = True,
+        use_bias: bool = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
 
         self.conv_layer = Sequential(name="Conv_layer")
@@ -37,10 +47,10 @@ class ConvLayer(Layer):
 class InvertedResidualBlock(Layer):
     def __init__(
         self,
-        in_channels=32,
-        out_channels=64,
-        depthwise_stride=1,
-        expansion_factor=2,
+        in_channels: int = 32,
+        out_channels: int = 64,
+        depthwise_stride: int = 1,
+        expansion_factor: Union[int, float] = 2,
         **kwargs,
     ):
         super().__init__(**kwargs)

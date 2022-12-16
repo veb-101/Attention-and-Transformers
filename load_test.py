@@ -22,5 +22,5 @@ model.summary()
 
 
 # Test MobileViT-V1
-model = MobileViT_v1.build_MobileViT_V1(model_type="S")
+model = MobileViT_v1.build_MobileViT_v1(model_type="S")
 model.summary()

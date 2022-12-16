@@ -1,12 +1,11 @@
+from typing import Union
+
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization
+from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization, Concatenate
 
 from .BaseLayers import ConvLayer
 from .linear_attention import LinearSelfAttention as LSA
-
-tf.random.set_seed(1)
-tf.keras.utils.set_random_seed(1)
 
 
 class Transformer(Layer):
@@ -51,7 +50,7 @@ class Transformer(Layer):
 
 
 # https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/modules/mobilevit_block.py#L186
-def unfolding(nn, patch_h=2, patch_w=2):
+def unfolding(nn, patch_h: int = 2, patch_w: int = 2):
     """
     ### Notations (wrt paper) ###
         B/b = batch
@@ -105,7 +104,7 @@ def unfolding(nn, patch_h=2, patch_w=2):
 
 
 # https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/modules/mobilevit_block.py#L233
-def folding(nn, info_dict: dict, patch_h=2, patch_w=2):
+def folding(nn, info_dict: dict, patch_h: int = 2, patch_w: int = 2):
     """
     ### Notations (wrt paper) ###
         B/b = batch
@@ -136,15 +135,15 @@ def folding(nn, info_dict: dict, patch_h=2, patch_w=2):
     return nn
 
 
-class MobileViT_V2_Block(Layer):
+class MobileViTBlock_v2(Layer):
     def __init__(
         self,
-        out_filters=64,
-        embedding_dim=90,
-        patch_size=(2, 2),
-        transformer_repeats=2,
-        attention_drop=0.0,
-        linear_drop=0.0,
+        out_filters: int = 64,
+        embedding_dim: int = 90,
+        patch_size: Union[int, tuple] = (2, 2),
+        transformer_repeats: int = 2,
+        attention_drop: float = 0.0,
+        linear_drop: float = 0.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -205,7 +204,7 @@ if __name__ == "__main__":
     L = 4
     embedding_dim = 144
 
-    mvitblk = MobileViT_V2_Block(
+    mvitblk = MobileViTBlock_v2(
         out_filters=C,
         embedding_dim=embedding_dim,
         patch_size=P,

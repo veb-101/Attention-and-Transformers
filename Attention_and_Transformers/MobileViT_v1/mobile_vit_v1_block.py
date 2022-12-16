@@ -1,3 +1,5 @@
+from typing import Union
+
 import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization, Concatenate
@@ -53,7 +55,7 @@ class Transformer(Layer):
 
 
 # https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/modules/mobilevit_block.py#L186
-def unfolding(nn, patch_h=2, patch_w=2):
+def unfolding(nn, patch_h: int = 2, patch_w: int = 2):
     """
     ### Notations (wrt paper) ###
         B/b = batch
@@ -107,7 +109,7 @@ def unfolding(nn, patch_h=2, patch_w=2):
 
 
 # https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/modules/mobilevit_block.py#L233
-def folding(nn, info_dict: dict, patch_h=2, patch_w=2):
+def folding(nn, info_dict: dict, patch_h: int = 2, patch_w: int = 2):
     """
     ### Notations (wrt paper) ###
         B/b = batch
@@ -138,23 +140,23 @@ def folding(nn, info_dict: dict, patch_h=2, patch_w=2):
     return nn
 
 
-class MobileViTBlock(Layer):
+class MobileViTBlock_v1(Layer):
     def __init__(
         self,
-        out_filters=64,
-        embedding_dim=90,
-        patch_size=(2, 2),
-        transformer_repeats=2,
-        num_heads=4,
-        attention_drop=0.0,
-        linear_drop=0.0,
+        out_filters: int = 64,
+        embedding_dim: int = 90,
+        patch_size: Union[int, tuple] = (2, 2),
+        transformer_repeats: int = 2,
+        num_heads: int = 4,
+        attention_drop: float = 0.0,
+        linear_drop: float = 0.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
 
         self.out_filters = out_filters
         self.embedding_dim = embedding_dim
-        self.patch_size_h, self.patch_size_w = patch_size
+        self.patch_size_h, self.patch_size_w = patch_size if isinstance(patch_size, tuple) else (patch_size // 2, patch_size // 2)
         self.transformer_repeats = transformer_repeats
         self.num_heads = num_heads
 
@@ -216,7 +218,7 @@ if __name__ == "__main__":
     L = 4
     embedding_dim = 144
 
-    mvitblk = MobileViTBlock(
+    mvitblk = MobileViTBlock_v1(
         out_filters=C,
         embedding_dim=embedding_dim,
         patch_size=P,

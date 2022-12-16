@@ -1,6 +1,7 @@
 # Adding all the basic libraries
 tensorflow>=2.10.0
-tensorflow-addons 
+tensorflow-addons
+tensorflow-datasets
 livelossplot
 opencv-python
 Pillow

@@ -1,5 +1,5 @@
 from Attention_and_Transformers.MobileViT_v1.BaseLayers import ConvLayer, InvertedResidualBlock, _make_divisible
 from Attention_and_Transformers.MobileViT_v1 import multihead_self_attention_2D
-from Attention_and_Transformers.MobileViT_v1.mobile_vit_v1_block import Transformer, MobileViTBlock
+from Attention_and_Transformers.MobileViT_v1.mobile_vit_v1_block import Transformer, MobileViTBlock_v1
 from Attention_and_Transformers.MobileViT_v1.mobile_vit_v1 import config_MobileViT_S, config_MobileViT_XS, config_MobileViT_XXS
-from Attention_and_Transformers.MobileViT_v1.mobile_vit_v1 import MobileViT_V1, build_MobileViT_V1
+from Attention_and_Transformers.MobileViT_v1.mobile_vit_v1 import MobileViT_v1, build_MobileViT_v1

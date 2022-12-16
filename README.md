@@ -27,7 +27,7 @@ cd atf
 python setup.py install
 ```
 
-**Test Installation**
+**Example Use**
 
 ```bash
 python load_test.py

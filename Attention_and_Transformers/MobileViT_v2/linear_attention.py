@@ -1,10 +1,8 @@
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Layer, Dropout
 from tensorflow.keras.layers import EinsumDense
 
 
-np.random.seed(1)
 tf.random.set_seed(1)
 tf.keras.utils.set_random_seed(1)
 

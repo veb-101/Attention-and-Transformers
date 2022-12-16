@@ -1,16 +1,23 @@
 import tensorflow as tf
-from ATF import VisionTransformers
+
+from ATF import ViT
 from ATF import MobileViT_v1
 
 
 # Test ViT
-model = VisionTransformers.VisionTransformer(
-    img_size=32, patch_size=4, n_classes=10, embedding_dim=256, depth=6, num_heads=8, mlp_ratio=2.0, linear_drop=0.2, attention_drop=0.2
+model = ViT.VisionTransformer(
+    img_size=32,
+    patch_size=4,
+    n_classes=10,
+    embedding_dim=64,
+    depth=2,
+    num_heads=2,
+    mlp_ratio=2.0,
+    linear_drop=0.2,
+    attention_drop=0.2,
 )
 
-
-a = tf.random.normal((1, 32, 32, 3))
-_ = model(a)
+model.build((None, None, None, 3))
 model.summary()
 
 

@@ -1,4 +1,3 @@
-import numpy as np
 import tensorflow as tf
 
 # from .multihead_self_attention import MultiHeadSelfAttention_basic as MHSA
@@ -6,7 +5,6 @@ from .multihead_self_attention import MultiHeadSelfAttentionEinSum as MHSA
 from tensorflow.keras.layers import Layer, Conv2D, Dropout, Dense, LayerNormalization
 from tensorflow.keras import Model, Sequential
 
-np.random.seed(1)
 tf.random.set_seed(1)
 tf.keras.utils.set_random_seed(1)
 
@@ -250,10 +248,10 @@ class VisionTransformer(Model):
 
         self.mlp_head = Sequential(
             layers=[
+                LayerNormalization(epsilon=1e-6),
                 Dense(hidden_features, activation="gelu"),
                 Dropout(linear_drop),
                 Dense(n_classes),
-                # Dropout(linear_drop),
             ]
         )
 

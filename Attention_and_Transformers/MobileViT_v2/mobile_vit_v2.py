@@ -18,6 +18,7 @@ def MobileViT_v2(
     attention_drop: Optional[float] = 0.2,
     num_classes: Optional[int] = 1000,
     input_shape: Optional[tuple] = (256, 256, 3),
+    model_name: str = "MobileViT-v3-1.0",
 ):
 
     """
@@ -151,7 +152,7 @@ def MobileViT_v2(
 
     out = Dense(units=num_classes)(out)
 
-    model = Model(inputs=input_layer, outputs=out, name=f"MobileViT")
+    model = Model(inputs=input_layer, outputs=out, name=model_name)
 
     return model
 
@@ -239,6 +240,7 @@ def build_MobileViT_v2(
         tf_embedding_dims=tf_embedding_dims,
         num_classes=num_classes,
         input_shape=input_shape,
+        model_name=f"MobileViT-v2-{width_multiplier}",
         **kwargs,
     )
 

@@ -2,7 +2,7 @@ from typing import Union
 
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization, Concatenate
+from tensorflow.keras.layers import Layer, DepthwiseConv2D, Dropout, Dense, BatchNormalization, LayerNormalization, Activation
 
 from .BaseLayers import ConvLayer
 from .linear_attention import LinearSelfAttention as LSA
@@ -135,7 +135,7 @@ def folding(nn, info_dict: dict, patch_h: int = 2, patch_w: int = 2):
     return nn
 
 
-class MobileViTBlock_v2(Layer):
+class MobileViT_v2_Block(Layer):
     def __init__(
         self,
         out_filters: int = 64,
@@ -154,11 +154,15 @@ class MobileViTBlock_v2(Layer):
         self.transformer_repeats = transformer_repeats
 
         # local_feature_extractor 1 and 2
-        self.local_features_1 = ConvLayer(num_filters=self.out_filters, kernel_size=3, strides=1, use_bn=True, use_activation=True)
-        self.local_features_2 = ConvLayer(num_filters=self.embedding_dim, kernel_size=1, strides=1, use_bn=False, use_activation=False)
-        self.local_rep = Sequential(layers=[self.local_features_1, self.local_features_2])
+        local_rep_layers = [
+            DepthwiseConv2D(kernel_size=3, strides=1, padding="same", use_bias=False),
+            BatchNormalization(),
+            Activation("swish"),
+            ConvLayer(num_filters=self.embedding_dim, kernel_size=1, strides=1, use_bn=False, use_activation=False, use_bias=False),
+        ]
+        self.local_rep = Sequential(layers=local_rep_layers)
 
-        layers = [
+        transformer_layers = [
             Transformer(
                 embedding_dim=self.embedding_dim,
                 linear_drop=linear_drop,
@@ -167,10 +171,10 @@ class MobileViTBlock_v2(Layer):
             for _ in range(self.transformer_repeats)
         ]
 
-        layers.append(LayerNormalization(epsilon=1e-6))
+        transformer_layers.append(LayerNormalization(epsilon=1e-6))
 
         # Repeated transformer blocks
-        self.transformer_blocks = Sequential(layers=layers)
+        self.transformer_blocks = Sequential(layers=transformer_layers)
 
         # Projection block
         self.conv_proj = ConvLayer(num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=False)
@@ -204,7 +208,7 @@ if __name__ == "__main__":
     L = 4
     embedding_dim = 144
 
-    mvitblk = MobileViTBlock_v2(
+    mvitblk = MobileViT_v2_Block(
         out_filters=C,
         embedding_dim=embedding_dim,
         patch_size=P,

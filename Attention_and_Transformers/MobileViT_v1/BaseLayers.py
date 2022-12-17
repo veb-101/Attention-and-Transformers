@@ -1,17 +1,8 @@
 from typing import Union
-import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Layer, Conv2D, BatchNormalization, Activation, DepthwiseConv2D
 
-# https://www.tensorflow.org/guide/mixed_precision#ensuring_gpu_tensor_cores_are_used
-def _make_divisible(v: Union[int, float], divisor: Union[int, float] = 8, min_value: Union[int, float] = None):
-    if min_value is None:
-        min_value = divisor
-    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
-    # Make sure that round down does not go down by more than 10%.
-    if new_v < 0.9 * v:
-        new_v += divisor
-    return new_v
+from .utils import make_divisible
 
 
 class ConvLayer(Layer):
@@ -58,8 +49,8 @@ class InvertedResidualBlock(Layer):
         # Input Parameters
 
         self.num_in_channels = in_channels
-        self.num_out_channels = int(_make_divisible(out_channels, divisor=8))
-        self.expansion_channels = int(_make_divisible(expansion_factor * self.num_in_channels))
+        self.num_out_channels = int(make_divisible(out_channels, divisor=8))
+        self.expansion_channels = int(make_divisible(expansion_factor * self.num_in_channels))
 
         self.depthwise_stride = depthwise_stride
 

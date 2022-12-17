@@ -1,2 +1,3 @@
-from Attention_and_Transformers import MobileViT_v1
 from Attention_and_Transformers import ViT
+from Attention_and_Transformers import MobileViT_v1
+from Attention_and_Transformers import MobileViT_v2

@@ -1,6 +1,6 @@
 ## Attention mechanisms and Transformers
 
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/Attention-and-Transformers) [![TensorFlow](https://img.shields.io/badge/Tensorflow-2.10%20%7C%202.11-orange?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/) [![PyPI version](https://badge.fury.io/py/Attention-and-Transformers.svg)](https://badge.fury.io/py/Attention-and-Transformers) [![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)](https://www.tensorflow.org/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/Attention-and-Transformers)](https://www.python.org/) [![TensorFlow](https://img.shields.io/badge/Tensorflow-2.10%20%7C%202.11-orange?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/) [![PyPI version](https://badge.fury.io/py/Attention-and-Transformers.svg)](https://badge.fury.io/py/Attention-and-Transformers) [![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)](https://www.tensorflow.org/)
 
 * This goal of this repository is to host basic architecture and model traning code associated with the different attention mechanisms and transformer architecture.
 * At the moment, I more interested in learning and recreating these new architectures from scratch than full-fledged training. For now, I'll just be training these models on small datasets.
@@ -118,7 +118,7 @@ python load_test.py
 </tr>
 <tr>
 <td style="text-align:center">3</td>
-<td style="text-align:center">MobileViT-V2 (under development)</td>
+<td style="text-align:center"><a href="https://github.com/veb-101/Attention-and-Transformers/blob/main/Attention_and_Transformers/MobileViT_v2/mobile_vit_v2.py">MobileViT-V2</a></td>
 <td style="text-align:center">
 <a href="https://arxiv.org/abs/2206.02680">Separable Self-attention for Mobile Vision Transformers</a>
 </td>

@@ -5,9 +5,10 @@ import tensorflow as tf
 
 from Attention_and_Transformers.ViT import VisionTransformer
 from Attention_and_Transformers.MobileViT_v1 import build_MobileViT_v1
+from Attention_and_Transformers.MobileViT_v2 import build_MobileViT_v2
 
 
-# Test ViT
+# Load ViT
 model = VisionTransformer(
     img_size=32,
     patch_size=4,
@@ -21,9 +22,18 @@ model = VisionTransformer(
 )
 
 model.build((None, None, None, 3))
-model.summary()
+print("ViT test Num. Parameteres:", model.count_params())
 
+# Load MobileViT-V1
+model = build_MobileViT_v1(model_type="XXS")
+print("MobileViT_v1 XXS Num. Parameteres:", model.count_params())
 
-# Test MobileViT-V1
+model = build_MobileViT_v1(model_type="XS")
+print("MobileViT_v1 XS Num. Parameteres:", model.count_params())
+
 model = build_MobileViT_v1(model_type="S")
-model.summary()
+print("MobileViT_v1 S Num. Parameteres:", model.count_params())
+
+# Load MobileViT-V1
+model = build_MobileViT_v2(width_multiplier=0.5)
+print("MobileViT_v2 0.5 Num. Parameteres:", model.count_params())

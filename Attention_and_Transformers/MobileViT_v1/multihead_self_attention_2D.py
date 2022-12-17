@@ -3,10 +3,6 @@ from tensorflow.keras.layers import Layer, Dropout
 from tensorflow.keras.layers import EinsumDense
 
 
-tf.random.set_seed(1)
-tf.keras.utils.set_random_seed(1)
-
-
 class MultiHeadSelfAttentionEinSum2D(Layer):
     def __init__(
         self,

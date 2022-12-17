@@ -7,9 +7,6 @@ from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization, C
 from .BaseLayers import ConvLayer
 from .multihead_self_attention_2D import MultiHeadSelfAttentionEinSum2D as MHSA
 
-tf.random.set_seed(1)
-tf.keras.utils.set_random_seed(1)
-
 
 class Transformer(Layer):
     def __init__(
@@ -140,7 +137,7 @@ def folding(nn, info_dict: dict, patch_h: int = 2, patch_w: int = 2):
     return nn
 
 
-class MobileViTBlock_v1(Layer):
+class MobileViT_v1_Block(Layer):
     def __init__(
         self,
         out_filters: int = 64,
@@ -218,7 +215,7 @@ if __name__ == "__main__":
     L = 4
     embedding_dim = 144
 
-    mvitblk = MobileViTBlock_v1(
+    mvitblk = MobileViT_v1_Block(
         out_filters=C,
         embedding_dim=embedding_dim,
         patch_size=P,

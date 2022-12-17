@@ -2,16 +2,15 @@ from typing import Union
 
 import tensorflow as tf
 from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Layer, Dropout, Dense, LayerNormalization, Concatenate
+from tensorflow.keras.layers import Layer, DepthwiseConv2D, Dropout, Dense, BatchNormalization, LayerNormalization, Activation, Concatenate
 
 from .BaseLayers import ConvLayer
-from .multihead_self_attention_2D import MultiHeadSelfAttentionEinSum2D as MHSA
+from .linear_attention import LinearSelfAttention as LSA
 
 
 class Transformer(Layer):
     def __init__(
         self,
-        num_heads: int = 4,
         embedding_dim: int = 90,
         qkv_bias: bool = True,
         mlp_ratio: float = 2.0,
@@ -24,8 +23,7 @@ class Transformer(Layer):
         self.norm_1 = LayerNormalization(epsilon=1e-6)
         self.norm_2 = LayerNormalization(epsilon=1e-6)
 
-        self.attn = MHSA(
-            num_heads=num_heads,
+        self.attn = LSA(
             embedding_dim=embedding_dim,
             qkv_bias=qkv_bias,
             attention_drop=attention_drop,
@@ -137,14 +135,13 @@ def folding(nn, info_dict: dict, patch_h: int = 2, patch_w: int = 2):
     return nn
 
 
-class MobileViT_v1_Block(Layer):
+class MobileViT_v3_Block(Layer):
     def __init__(
         self,
         out_filters: int = 64,
         embedding_dim: int = 90,
         patch_size: Union[int, tuple] = (2, 2),
         transformer_repeats: int = 2,
-        num_heads: int = 4,
         attention_drop: float = 0.0,
         linear_drop: float = 0.0,
         **kwargs,
@@ -155,11 +152,12 @@ class MobileViT_v1_Block(Layer):
         self.embedding_dim = embedding_dim
         self.patch_size_h, self.patch_size_w = patch_size if isinstance(patch_size, tuple) else (patch_size // 2, patch_size // 2)
         self.transformer_repeats = transformer_repeats
-        self.num_heads = num_heads
 
         # local_feature_extractor 1 and 2
         local_rep_layers = [
-            ConvLayer(num_filters=self.out_filters, kernel_size=3, strides=1, use_bn=True, use_activation=True),
+            DepthwiseConv2D(kernel_size=3, strides=1, padding="same", use_bias=False),
+            BatchNormalization(),
+            Activation("swish"),
             ConvLayer(num_filters=self.embedding_dim, kernel_size=1, strides=1, use_bn=False, use_activation=False, use_bias=False),
         ]
         self.local_rep = Sequential(layers=local_rep_layers)
@@ -167,7 +165,6 @@ class MobileViT_v1_Block(Layer):
         transformer_layers = [
             Transformer(
                 embedding_dim=self.embedding_dim,
-                num_heads=self.num_heads,
                 linear_drop=linear_drop,
                 attention_drop=attention_drop,
             )
@@ -180,9 +177,8 @@ class MobileViT_v1_Block(Layer):
         self.transformer_blocks = Sequential(layers=transformer_layers)
 
         # Fusion blocks
-        self.local_features_3 = ConvLayer(num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=True)
         self.concat = Concatenate(axis=-1)
-        self.fuse_local_global = ConvLayer(num_filters=self.out_filters, kernel_size=3, strides=1, use_bn=True, use_activation=True)
+        self.fusion_block = ConvLayer(num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=False)
 
     def call(self, x):
         local_representation = self.local_rep(x)
@@ -199,12 +195,12 @@ class MobileViT_v1_Block(Layer):
         folded = folding(global_representation, info_dict=info_dict, patch_h=self.patch_size_h, patch_w=self.patch_size_w)
         # # --------------------------------
 
-        # Fusion
-        local_mix = self.local_features_3(folded)
-        fusion = self.concat([local_mix, x])
-        fusion = self.fuse_local_global(fusion)
+        # Fusion + skip connection
+        fusion = self.fusion_block(self.concat([local_representation, folded]))
 
-        return fusion
+        final = fusion + x
+
+        return final
 
 
 if __name__ == "__main__":
@@ -215,7 +211,7 @@ if __name__ == "__main__":
     L = 4
     embedding_dim = 144
 
-    mvitblk = MobileViT_v1_Block(
+    mvitblk = MobileViT_v3_Block(
         out_filters=C,
         embedding_dim=embedding_dim,
         patch_size=P,

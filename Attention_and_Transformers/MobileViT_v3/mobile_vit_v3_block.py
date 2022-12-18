@@ -1,19 +1,22 @@
-from typing import Union
+from typing import Union, Optional
 
 import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Layer, DepthwiseConv2D, Dropout, Dense, BatchNormalization, LayerNormalization, Activation, Concatenate
 
 from .BaseLayers import ConvLayer
-from .linear_attention import LinearSelfAttention as LSA
+from .attention_blocks import LinearSelfAttention as LSA
+from .attention_blocks import MultiHeadSelfAttentionEinSum2D as MHSA
 
 
 class Transformer(Layer):
     def __init__(
         self,
+        attention_type: str,
         embedding_dim: int = 90,
-        qkv_bias: bool = True,
-        mlp_ratio: float = 2.0,
+        num_heads: Optional[int] = 4,
+        qkv_bias: Optional[bool] = True,
+        mlp_ratio: Optional[float] = 2.0,
         linear_drop: float = 0.2,
         attention_drop: float = 0.2,
         **kwargs,
@@ -23,12 +26,21 @@ class Transformer(Layer):
         self.norm_1 = LayerNormalization(epsilon=1e-6)
         self.norm_2 = LayerNormalization(epsilon=1e-6)
 
-        self.attn = LSA(
-            embedding_dim=embedding_dim,
-            qkv_bias=qkv_bias,
-            attention_drop=attention_drop,
-            linear_drop=linear_drop,
-        )
+        if attention_type == "LSA":
+            self.attn = LSA(
+                embedding_dim=embedding_dim,
+                qkv_bias=qkv_bias,
+                attention_drop=attention_drop,
+                linear_drop=linear_drop,
+            )
+        elif attention_type == "MHSA":
+            self.attn = MHSA(
+                num_heads=num_heads,
+                embedding_dim=embedding_dim,
+                qkv_bias=qkv_bias,
+                attention_drop=attention_drop,
+                linear_drop=linear_drop,
+            )
 
         hidden_features = int(embedding_dim * mlp_ratio)
 
@@ -138,10 +150,12 @@ def folding(nn, info_dict: dict, patch_h: int = 2, patch_w: int = 2):
 class MobileViT_v3_Block(Layer):
     def __init__(
         self,
+        attention_type: str,
         out_filters: int = 64,
         embedding_dim: int = 90,
-        patch_size: Union[int, tuple] = (2, 2),
         transformer_repeats: int = 2,
+        num_heads: Optional[int] = 4,
+        patch_size: Optional[Union[int, tuple]] = (2, 2),
         attention_drop: float = 0.0,
         linear_drop: float = 0.0,
         **kwargs,
@@ -152,6 +166,7 @@ class MobileViT_v3_Block(Layer):
         self.embedding_dim = embedding_dim
         self.patch_size_h, self.patch_size_w = patch_size if isinstance(patch_size, tuple) else (patch_size // 2, patch_size // 2)
         self.transformer_repeats = transformer_repeats
+        self.num_heads = num_heads
 
         # local_feature_extractor 1 and 2
         local_rep_layers = [
@@ -164,6 +179,7 @@ class MobileViT_v3_Block(Layer):
 
         transformer_layers = [
             Transformer(
+                attention_type=attention_type,
                 embedding_dim=self.embedding_dim,
                 linear_drop=linear_drop,
                 attention_drop=attention_drop,
@@ -212,6 +228,7 @@ if __name__ == "__main__":
     embedding_dim = 144
 
     mvitblk = MobileViT_v3_Block(
+        attention_type="LSA",
         out_filters=C,
         embedding_dim=embedding_dim,
         patch_size=P,

@@ -126,7 +126,7 @@ python load_test.py
 <tr>
 <td style="text-align:center">2</td>
 <td style="text-align:center">
-<a href="https://github.com/veb-101/Attention-and-Transformers/blob/main/Attention_and_Transformers/MobileViT_v3/mobile_vit_v3.py">MobileViT-V1</a>
+<a href="https://github.com/veb-101/Attention-and-Transformers/blob/main/Attention_and_Transformers/MobileViT_v3/mobile_vit_v3.py">MobileViT-V3</a>
 </td>
 <td style="text-align:center">
 <a href="https://arxiv.org/abs/2209.15159">MobileViTv3: Mobile-Friendly Vision Transformer</a>

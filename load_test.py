@@ -7,6 +7,7 @@ from Attention_and_Transformers.ViT import VisionTransformer
 from Attention_and_Transformers.MobileViT_v1 import build_MobileViT_v1
 from Attention_and_Transformers.MobileViT_v2 import build_MobileViT_v2
 from Attention_and_Transformers.MobileViT_v3 import build_MobileViT_v3
+from Attention_and_Transformers.MobileViT_v3 import build_MobileViT_v3
 
 # =====================================-ViT-======================================
 model = VisionTransformer(
@@ -42,6 +43,17 @@ model = build_MobileViT_v2(width_multiplier=0.5)
 # model = build_MobileViT_v2(width_multiplier=2.0)
 
 print(f"{model.name} Num. Parameteres:", model.count_params())
+
+updates = {
+    "block_3_1_dims": 256,
+    "block_3_2_dims": 384,
+    "tf_block_3_dims": 164,
+    "tf_block_3_repeats": 3,
+}
+
+model = build_MobileViT_v2(width_multiplier=0.5, updates=updates)
+print(f"{model.name} Num. Parameteres:", model.count_params())
+
 # ================================================================================
 
 

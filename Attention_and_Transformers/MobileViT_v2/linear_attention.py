@@ -23,9 +23,11 @@ class LinearSelfAttention(Layer):
         # self.num_heads = num_heads
         self.embedding_dim = embedding_dim
         self.qkv_bias = qkv_bias
+        self.attention_drop = attention_drop
+        self.linear_drop = linear_drop
 
-        self.use_attention_drop = attention_drop > 0.0
-        self.use_linear_drop = linear_drop > 0.0
+        self.use_attention_drop = self.attention_drop > 0.0
+        self.use_linear_drop = self.linear_drop > 0.0
 
         if self.use_attention_drop:
             self.attn_dropout = Dropout(attention_drop)
@@ -95,7 +97,6 @@ class LinearSelfAttention(Layer):
         config.update(
             {
                 "embedding_dim": self.embedding_dim,
-                "projection_dim": self.projection_dim,
                 "qkv_bias": self.qkv_bias,
                 "attention_drop": self.attention_drop,
                 "linear_drop": self.linear_drop,

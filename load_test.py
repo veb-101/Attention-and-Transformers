@@ -80,9 +80,9 @@ model = build_MobileViT_v3(ref_version="v1", indentifier="XXS")
 # model = build_MobileViT_v3(ref_version="v1", indentifier="S")
 print(f"{model.name} Num. Parameteres:", model.count_params())
 
-model = build_MobileViT_v3(ref_version="v1", indentifier="XXS-fast")
-# model = build_MobileViT_v3(ref_version="v1", indentifier="XS-fast")
-# model = build_MobileViT_v3(ref_version="v1", indentifier="S-fast")
+model = build_MobileViT_v3(ref_version="v1", indentifier="XXS", fast_version=True)
+# model = build_MobileViT_v3(ref_version="v1", indentifier="XS", fast_version=True)
+# model = build_MobileViT_v3(ref_version="v1", indentifier="S", fast_version=True)
 print(f"{model.name} Num. Parameteres:", model.count_params())
 
 

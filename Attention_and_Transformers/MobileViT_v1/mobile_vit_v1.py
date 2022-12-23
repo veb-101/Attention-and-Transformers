@@ -9,17 +9,18 @@ from .mobile_vit_v1_block import MobileViT_v1_Block
 
 
 def MobileViT_v1(
-    configs=None,
+    configs,
     linear_drop: float = 0.0,
     attention_drop: float = 0.2,
     num_classes: int = 1000,
     input_shape: tuple[int, int, int] = (256, 256, 3),
-    model_type: str = "S",
+    model_name: str = f"MobileViT_v1-S",
 ):
 
     """
     Arguments
     --------
+
         configs: A dataclass instance with model information such as per layer output channels, transformer embedding dimensions, transformer repeats, IR expansion factor
 
         num_classes: (int)   Number of output classes
@@ -140,7 +141,7 @@ def MobileViT_v1(
         linear_drop=linear_drop,
     )(out)
 
-    out = ConvLayer(num_filters=configs.final_conv, kernel_size=1, strides=1)(out)
+    out = ConvLayer(num_filters=configs.final_conv_dims, kernel_size=1, strides=1)(out)
 
     # Output layer
     out = GlobalAveragePooling2D()(out)
@@ -150,7 +151,7 @@ def MobileViT_v1(
 
     out = Dense(units=num_classes)(out)
 
-    model = Model(inputs=input_layer, outputs=out, name=f"MobileViT_v1-{model_type}")
+    model = Model(inputs=input_layer, outputs=out, name=model_name)
 
     return model
 
@@ -194,7 +195,7 @@ def build_MobileViT_v1(
         configs=updated_configs,
         num_classes=num_classes,
         input_shape=input_shape,
-        model_type=model_type,
+        model_name=f"MobileViT_v1-{model_type}",
         **kwargs,
     )
 

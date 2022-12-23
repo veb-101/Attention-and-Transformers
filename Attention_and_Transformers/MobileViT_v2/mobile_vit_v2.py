@@ -9,7 +9,7 @@ from .mobile_vit_v2_block import MobileViT_v2_Block
 
 
 def MobileViT_v2(
-    configs=None,
+    configs,
     linear_drop: float = 0.0,
     attention_drop: float = 0.2,
     num_classes: int = 1000,
@@ -20,6 +20,7 @@ def MobileViT_v2(
     """
     Arguments
     --------
+    
         configs: A dataclass instance with model information such as per layer output channels, transformer embedding dimensions, transformer repeats, IR expansion factor
 
         num_classes: (int)   Number of output classes

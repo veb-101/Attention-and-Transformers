@@ -4,7 +4,7 @@ from .utils import bound_fn, make_divisible
 
 
 @dataclass
-class BaseConfigs:
+class Config_MobileViT_v2:
     block_1_1_dims: int = 32
     block_1_2_dims: int = 64
 
@@ -31,12 +31,12 @@ class BaseConfigs:
     depthwise_expansion_factor: int = 2
 
 
-def update_dimensions(width_multiplier: float, updates: Optional[dict]):
+def get_mobile_vit_v2_configs(width_multiplier: float, updates: Optional[dict]):
 
     if updates:
-        configs = BaseConfigs(**updates)
+        configs = Config_MobileViT_v2(**updates)
     else:
-        configs = BaseConfigs()
+        configs = Config_MobileViT_v2()
 
     configs.block_1_1_dims = bound_fn(min_val=16, max_val=64, value=configs.block_1_1_dims * width_multiplier)
     configs.block_1_1_dims = int(make_divisible(configs.block_1_1_dims, divisor=8, min_value=16))

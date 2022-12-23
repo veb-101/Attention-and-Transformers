@@ -30,10 +30,10 @@ class LinearSelfAttention(Layer):
         self.use_linear_drop = self.linear_drop > 0.0
 
         if self.use_attention_drop:
-            self.attn_dropout = Dropout(attention_drop)
+            self.attn_dropout = Dropout(self.attention_drop)
 
         if self.use_linear_drop:
-            self.linear_dropout = Dropout(linear_drop)
+            self.linear_dropout = Dropout(self.linear_drop)
 
         # Shape: (B, P, N, D) * (D, 1 + (2 * D)) --> (B, P, N, 1 + (2 * D))
         self.W_QKV = EinsumDense(

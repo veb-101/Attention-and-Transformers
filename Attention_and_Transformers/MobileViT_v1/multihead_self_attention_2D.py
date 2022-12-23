@@ -21,15 +21,17 @@ class MultiHeadSelfAttentionEinSum2D(Layer):
         self.projection_dim = projection_dim if projection_dim else self.embedding_dim // self.num_heads
         self.scale = self.projection_dim**0.5
         self.qkv_bias = qkv_bias
+        self.attention_drop = attention_drop
+        self.linear_drop = linear_drop
 
-        self.use_attention_drop = attention_drop > 0.0
-        self.use_linear_drop = linear_drop > 0.0
+        self.use_attention_drop = self.attention_drop > 0.0
+        self.use_linear_drop = self.linear_drop > 0.0
 
         if self.use_attention_drop:
-            self.attn_dropout = Dropout(attention_drop)
+            self.attn_dropout = Dropout(self.attention_drop)
 
         if self.use_linear_drop:
-            self.linear_dropout = Dropout(linear_drop)
+            self.linear_dropout = Dropout(self.linear_drop)
 
         ##### Notations (wrt paper) #####
         # B/b = batch

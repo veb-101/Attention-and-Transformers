@@ -4,29 +4,36 @@ import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Layer, DepthwiseConv2D, Dropout, Dense, BatchNormalization, LayerNormalization, Activation, Concatenate
 
+# from Attention_and_Transformers.MobileViT_v1.multihead_self_attention_2D import MultiHeadSelfAttentionEinSum2D as MHSA
+# from Attention_and_Transformers.MobileViT_v2.linear_attention import LinearSelfAttention as LSA
+
 from .BaseLayers import ConvLayer
-from .attention_blocks import LinearSelfAttention as LSA
 from .attention_blocks import MultiHeadSelfAttentionEinSum2D as MHSA
+from .attention_blocks import LinearSelfAttention as LSA
 
 
 class Transformer(Layer):
     def __init__(
         self,
-        ref_version: str,
+        ref_version: str = "v1",
+        num_heads: int = 4,
         embedding_dim: int = 90,
-        num_heads: Optional[int] = 4,
-        qkv_bias: Optional[bool] = True,
-        mlp_ratio: Optional[float] = 2.0,
+        qkv_bias: bool = True,
+        mlp_ratio: float = 2.0,
         linear_drop: float = 0.2,
         attention_drop: float = 0.2,
         **kwargs,
     ):
         super().__init__(**kwargs)
+        self.ref_version = ref_version
+        self.embedding_dim = embedding_dim
+        self.mlp_ratio = mlp_ratio
+        self.linear_drop = linear_drop
 
         self.norm_1 = LayerNormalization(epsilon=1e-6)
         self.norm_2 = LayerNormalization(epsilon=1e-6)
 
-        if ref_version == "v1":
+        if self.ref_version == "v1":
             self.attn = MHSA(
                 num_heads=num_heads,
                 embedding_dim=embedding_dim,
@@ -34,7 +41,7 @@ class Transformer(Layer):
                 attention_drop=attention_drop,
                 linear_drop=linear_drop,
             )
-        elif ref_version == "v2":
+        elif self.ref_version == "v2":
             self.attn = LSA(
                 embedding_dim=embedding_dim,
                 qkv_bias=qkv_bias,
@@ -42,14 +49,14 @@ class Transformer(Layer):
                 linear_drop=linear_drop,
             )
 
-        hidden_features = int(embedding_dim * mlp_ratio)
+        hidden_features = int(self.embedding_dim * self.mlp_ratio)
 
         self.mlp = Sequential(
             layers=[
                 Dense(hidden_features, activation="swish"),
-                Dropout(linear_drop),
+                Dropout(self.linear_drop),
                 Dense(embedding_dim),
-                Dropout(linear_drop),
+                Dropout(self.linear_drop),
             ]
         )
 
@@ -60,9 +67,33 @@ class Transformer(Layer):
 
         return x
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "ref_version": self.ref_version,
+                "embedding_dim": self.embedding_dim,
+                "mlp_ratio": self.mlp_ratio,
+                "linear_drop": self.linear_drop,
+            }
+        )
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
 
 # https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/modules/mobilevit_block.py#L186
-def unfolding(nn, patch_h: int = 2, patch_w: int = 2):
+def unfolding(
+    x,
+    B: int = 1,
+    D: int = 144,
+    patch_h: int = 2,
+    patch_w: int = 2,
+    num_patches_h: int = 10,
+    num_patches_w: int = 10,
+):
     """
     ### Notations (wrt paper) ###
         B/b = batch
@@ -78,45 +109,31 @@ def unfolding(nn, patch_h: int = 2, patch_w: int = 2):
         [13, 14, 15, 16],           [6, 8, 14, 16]
     ]                            ]
     """
-
-    B, H, W, D = tf.shape(nn)[0], tf.shape(nn)[1], tf.shape(nn)[2], tf.shape(nn)[3]
-    patch_area = int(patch_h * patch_w)
-
-    num_patch_h, num_patch_w = int(tf.math.ceil(H / patch_h)), int(tf.math.ceil(W / patch_w))
-    num_patches = num_patch_h * num_patch_w
-
-    interpolate = False
-
-    if ((num_patch_h * patch_h) != H) or ((num_patch_w * patch_w) != W):
-        nn = tf.image.resize(nn, [num_patch_h * patch_h, num_patch_w * patch_w], method="bilinear")
-        interpolate = True
-
     # [B, H, W, D] --> [B*nh, ph, nw, pw*D]
-    reshaped_folded = tf.reshape(nn, (B * num_patch_h, patch_h, num_patch_w, patch_w * D))
+    reshaped_fm = tf.reshape(x, (B * num_patches_h, patch_h, num_patches_w, patch_w * D))
 
     # [B*nh, ph, nw, pw*D] --> [B*nh, nw, ph, pw*D]
-    transposed_folded = tf.transpose(reshaped_folded, perm=[0, 2, 1, 3])
+    transposed_fm = tf.transpose(reshaped_fm, perm=[0, 2, 1, 3])
 
     # [B*nh, nw, ph, pw*D] --> [B, N, P, D]
-    reshaped_folded = tf.reshape(transposed_folded, (B, num_patches, patch_area, D))
+    reshaped_fm = tf.reshape(transposed_fm, (B, num_patches_h * num_patches_w, patch_h * patch_w, D))
 
     # [B, N, P, D] --> [B, P, N, D]
-    transposed_folded = tf.transpose(reshaped_folded, perm=[0, 2, 1, 3])
+    transposed_fm = tf.transpose(reshaped_fm, perm=[0, 2, 1, 3])
 
-    info_dict = {
-        "orig_size": (H, W),
-        "batch_size": B,
-        "dim": D,
-        "interpolate": interpolate,
-        "num_patches_w": num_patch_w,
-        "num_patches_h": num_patch_h,
-    }
-
-    return transposed_folded, info_dict
+    return transposed_fm
 
 
 # https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/modules/mobilevit_block.py#L233
-def folding(nn, info_dict: dict, patch_h: int = 2, patch_w: int = 2):
+def folding(
+    x,
+    B: int = 1,
+    D: int = 144,
+    patch_h: int = 2,
+    patch_w: int = 2,
+    num_patches_h: int = 10,
+    num_patches_w: int = 10,
+):
     """
     ### Notations (wrt paper) ###
         B/b = batch
@@ -124,33 +141,25 @@ def folding(nn, info_dict: dict, patch_h: int = 2, patch_w: int = 2):
         N/n = number of patches
         D/d = embedding_dim
     """
-
-    B = info_dict["batch_size"]
-    D = info_dict["dim"]
-    num_patch_h = info_dict["num_patches_h"]
-    num_patch_w = info_dict["num_patches_w"]
-
     # [B, P, N D] --> [B, N, P, D]
-    nn = tf.transpose(nn, perm=(0, 2, 1, 3))
+    x = tf.transpose(x, perm=(0, 2, 1, 3))
 
     # [B, N, P, D] --> [B*nh, nw, ph, pw*D]
-    nn = tf.reshape(nn, (B * num_patch_h, num_patch_w, patch_h, patch_w * D))
+    x = tf.reshape(x, (B * num_patches_h, num_patches_w, patch_h, patch_w * D))
 
     # [B*nh, nw, ph, pw*D] --> [B*nh, ph, nw, pw*D]
-    nn = tf.transpose(nn, perm=(0, 2, 1, 3))
+    x = tf.transpose(x, perm=(0, 2, 1, 3))
 
     # [B*nh, ph, nw, pw*D] --> [B, nh*ph, nw, pw, D] --> [B, H, W, C]
-    nn = tf.reshape(nn, (B, num_patch_h * patch_h, num_patch_w * patch_w, D))
+    x = tf.reshape(x, (B, num_patches_h * patch_h, num_patches_w * patch_w, D))
 
-    if info_dict["interpolate"]:
-        nn = tf.image.resize(nn, size=info_dict["orig_size"])
-    return nn
+    return x
 
 
 class MobileViT_v3_Block(Layer):
     def __init__(
         self,
-        ref_version: str,
+        ref_version: str = "v1",
         out_filters: int = 64,
         embedding_dim: int = 90,
         transformer_repeats: int = 2,
@@ -162,11 +171,14 @@ class MobileViT_v3_Block(Layer):
     ):
         super().__init__(**kwargs)
 
+        self.ref_version = ref_version
         self.out_filters = out_filters
         self.embedding_dim = embedding_dim
-        self.patch_size_h, self.patch_size_w = patch_size if isinstance(patch_size, tuple) else (patch_size // 2, patch_size // 2)
+        self.patch_size = patch_size
         self.transformer_repeats = transformer_repeats
-        self.num_heads = num_heads
+
+        self.patch_size_h, self.patch_size_w = patch_size if isinstance(self.patch_size, tuple) else (self.patch_size // 2, self.patch_size // 2)
+        self.patch_size_h, self.patch_size_w = tf.cast(self.patch_size_h, tf.int32), tf.cast(self.patch_size_w, tf.int32)
 
         # local_feature_extractor 1 and 2
         local_rep_layers = [
@@ -179,7 +191,8 @@ class MobileViT_v3_Block(Layer):
 
         transformer_layers = [
             Transformer(
-                ref_version=ref_version,
+                ref_version=self.ref_version,
+                num_heads=num_heads,
                 embedding_dim=self.embedding_dim,
                 linear_drop=linear_drop,
                 attention_drop=attention_drop,
@@ -197,12 +210,12 @@ class MobileViT_v3_Block(Layer):
         # Fusion blocks
         self.project = False
 
-        if ref_version == "v1":
+        if self.ref_version == "v1":
             self.conv_proj = ConvLayer(num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=True)
             self.project = True
 
         self.fusion = ConvLayer(
-            num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=True if ref_version == "v1" else False
+            num_filters=self.out_filters, kernel_size=1, strides=1, use_bn=True, use_activation=True if self.ref_version == "v1" else False
         )
 
     def call(self, x):
@@ -211,13 +224,34 @@ class MobileViT_v3_Block(Layer):
         # Transformer as Convolution Steps
         # --------------------------------
         # # Unfolding
-        unfolded, info_dict = unfolding(local_representation, patch_h=self.patch_size_h, patch_w=self.patch_size_w)
+
+        batch_size, fmH, fmW = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
+        num_patches_h = tf.math.floordiv(fmH, self.patch_size_h)
+        num_patches_w = tf.math.floordiv(fmW, self.patch_size_w)
+
+        unfolded = unfolding(
+            local_representation,
+            B=batch_size,
+            D=self.embedding_dim,
+            patch_h=self.patch_size_h,
+            patch_w=self.patch_size_w,
+            num_patches_h=num_patches_h,
+            num_patches_w=num_patches_w,
+        )
 
         # # Infomation sharing/mixing --> global representation
         global_representation = self.transformer_blocks(unfolded)
 
         # # Folding
-        folded = folding(global_representation, info_dict=info_dict, patch_h=self.patch_size_h, patch_w=self.patch_size_w)
+        folded = folding(
+            global_representation,
+            B=batch_size,
+            D=self.embedding_dim,
+            patch_h=self.patch_size_h,
+            patch_w=self.patch_size_w,
+            num_patches_h=num_patches_h,
+            num_patches_w=num_patches_w,
+        )
         # # --------------------------------
 
         # New Fustion Block
@@ -230,6 +264,22 @@ class MobileViT_v3_Block(Layer):
         final = x + fused
 
         return final
+
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                "out_filters": self.out_filters,
+                "embedding_dim": self.embedding_dim,
+                "patch_size": self.patch_size,
+                "transformer_repeats": self.transformer_repeats,
+            }
+        )
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
 
 
 if __name__ == "__main__":

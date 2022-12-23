@@ -20,7 +20,7 @@ class Config_MobileViT_v1_S:
     block_5_1_dims: int = 160
     block_5_2_dims: int = 160
 
-    final_conv: int = 640
+    final_conv_dims: int = 640
 
     tf_block_3_dims: int = 144
     tf_block_4_dims: int = 192
@@ -51,7 +51,7 @@ class Config_MobileViT_v1_XS:
     block_5_1_dims: int = 96
     block_5_2_dims: int = 96
 
-    final_conv: int = 384
+    final_conv_dims: int = 384
 
     tf_block_3_dims: int = 96
     tf_block_4_dims: int = 120
@@ -82,7 +82,7 @@ class Config_MobileViT_v1_XXS:
     block_5_1_dims: int = 80
     block_5_2_dims: int = 80
 
-    final_conv: int = 320
+    final_conv_dims: int = 320
 
     tf_block_3_dims: int = 64
     tf_block_4_dims: int = 80

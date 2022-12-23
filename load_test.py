@@ -7,9 +7,9 @@ from Attention_and_Transformers.ViT import VisionTransformer
 from Attention_and_Transformers.MobileViT_v1 import build_MobileViT_v1
 from Attention_and_Transformers.MobileViT_v2 import build_MobileViT_v2
 from Attention_and_Transformers.MobileViT_v3 import build_MobileViT_v3
+from Attention_and_Transformers.MobileViT_v3 import build_MobileViT_v3
 
-
-# Load ViT
+# =====================================-ViT-======================================
 model = VisionTransformer(
     img_size=32,
     patch_size=4,
@@ -23,19 +23,19 @@ model = VisionTransformer(
 )
 
 model.build((None, None, None, 3))
-print("ViT test Num. Parameteres:", model.count_params())
+print("ViT Num. Parameteres:", model.count_params())
+# ================================================================================
 
-# Load MobileViT-V1
+
+# =================================-MobileViT-v1-=================================
 model = build_MobileViT_v1(model_type="XXS")
-print("MobileViT_v1 XXS Num. Parameteres:", model.count_params())
+# model = build_MobileViT_v1(model_type="XS")
+# model = build_MobileViT_v1(model_type="S")
+print(f"{model.name} Num. Parameteres:", model.count_params())
+# ================================================================================
 
-model = build_MobileViT_v1(model_type="XS")
-print("MobileViT_v1 XS Num. Parameteres:", model.count_params())
 
-model = build_MobileViT_v1(model_type="S")
-print("MobileViT_v1 S Num. Parameteres:", model.count_params())
-
-# Load MobileViT-V1
+# =================================-MobileViT-v2-=================================
 model = build_MobileViT_v2(width_multiplier=0.5)
 # model = build_MobileViT_v2(width_multiplier=0.75)
 # model = build_MobileViT_v2(width_multiplier=1.0)

@@ -42,7 +42,6 @@ model = build_MobileViT_v2(width_multiplier=0.5)
 # model = build_MobileViT_v2(width_multiplier=1.5)
 # model = build_MobileViT_v2(width_multiplier=2.0)
 
-model.save(f"{model.name}")
 print(f"{model.name} Num. Parameteres:", model.count_params())
 
 updates = {

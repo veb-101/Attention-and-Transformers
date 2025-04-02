@@ -1,6 +1,6 @@
 ## Attention mechanisms and Transformers
 
-### Updates: I'm moving the codebase to a [new repository](https://github.com/veb-101/keras-vision) and rewriting it using the latest Keras 3.x version for multi-backend support. I will also port the pretrained weights of the models written here.
+### Updates: I'm moving the codebase to a [new repository](https://github.com/veb-101/keras-vision) and rewriting it using the latest Keras 3.x version for multi-backend support. It will also include the pretrained weights of the models in Keras format.
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/Attention-and-Transformers)](https://www.python.org/) [![TensorFlow](https://img.shields.io/badge/Tensorflow-2.10%20%7C%202.11-orange?logo=tensorflow)](https://github.com/tensorflow/tensorflow/releases/) [![PyPI version](https://badge.fury.io/py/Attention-and-Transformers.svg)](https://badge.fury.io/py/Attention-and-Transformers) [![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)](https://www.tensorflow.org/)
 
